@@ -1,0 +1,86 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Crimson Pro", Georgia, serif;
+  --font-display: "Cinzel", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  
+  --color-sepia-50: #F1EBE4;
+  --color-sepia-100: #F0E1D4;
+  --color-sepia-200: #DCD1C6;
+  --color-sepia-300: #BAACA0;
+  --color-sepia-500: #C5A68F;
+  --color-sepia-700: #786759;
+  --color-sepia-900: #4F4739;
+  
+  --color-parchment-50: #fcfaf2;
+  --color-parchment-100: #f9f5e8;
+  --color-parchment-200: #f3ebd0;
+  --color-parchment-300: #e7daaf;
+  --color-parchment-400: #d6bf85;
+  --color-parchment-500: #c5a45e;
+  --color-parchment-900: #554425;
+  
+  --color-vintage-charcoal: #4F4739;
+  --color-vintage-gold: #C5A68F;
+  --color-vintage-green: #786759;
+  --color-vintage-red: #8b3c3c;
+}
+
+/* Custom board game styles */
+.parchment-texture {
+  background-color: #f9f5e8;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 0),
+                    radial-gradient(rgba(0, 0, 0, 0.01) 2px, transparent 0);
+  background-size: 8px 8px, 16px 16px;
+  box-shadow: inset 0 0 40px rgba(85, 68, 37, 0.08);
+}
+
+.vintage-border {
+  border: 2px solid #554425;
+  box-shadow: 0 4px 12px rgba(85, 68, 37, 0.15);
+}
+
+.vintage-button {
+  background-color: #2a4c3f;
+  color: #f9f5e8;
+  border: 1px solid #c5a45e;
+  font-family: var(--font-display);
+  letter-spacing: 0.05em;
+  transition: all 0.2s ease;
+}
+
+.vintage-button:hover {
+  background-color: #355f4f;
+  border-color: #f3ebd0;
+  transform: translateY(-1px);
+}
+
+.board-square-hover {
+  transition: all 0.15s ease-in-out;
+}
+
+.board-square-hover:hover {
+  filter: brightness(0.95);
+  transform: scale(1.02);
+  z-index: 10;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F1EBE4;
+}
+::-webkit-scrollbar-thumb {
+  background: #C5A68F;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #786759;
+}
+

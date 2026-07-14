@@ -1,0 +1,1104 @@
+{
+  "id": "qa-automation-testing",
+  "niche": "Software Testing & Quality Assurance (QA) Automation",
+  "companies": [
+    {
+      "name": "BugSlayer OSS",
+      "index": 1,
+      "colorGroup": "brown",
+      "marketShare": "0.4%",
+      "valuation": "$2.5M",
+      "purchaseCost": 60,
+      "rentPrices": [2, 10, 30, 90, 160, 250],
+      "stakeCost": 50,
+      "team": {
+        "headcount": "12",
+        "keyExecutives": [
+          {
+            "name": "Linus Sterling",
+            "role": "CEO & Founder",
+            "bio": "Former Debian contributor and systems engineer passionate about democratizing open-source debug tooling."
+          },
+          {
+            "name": "Sarah Chen",
+            "role": "CTO",
+            "bio": "Expert in Node.js profiling who previously led open-source outreach at Mozilla."
+          }
+        ],
+        "structureDescription": "Flat, completely remote community-driven core dev team.",
+        "hiringTrends": "Opportunistic hiring from active Github contributors and open-source evangelists.",
+        "culture": "Radically transparent, anti-corporate, highly focused on code purity and developer autonomy."
+      },
+      "numbers": {
+        "annualRevenue": "$350,000",
+        "fundingRaised": "$500,000 (Pre-seed)",
+        "burnRate": "$25,000 / month",
+        "profitability": "Breakeven",
+        "keyAssets": "High-velocity CLI tool with over 2 million NPM downloads and an active GitHub community."
+      },
+      "mission": {
+        "statement": "To make automated syntax and unit testing accessible to every developer globally without corporate gatekeeping.",
+        "corePhilosophy": "Keep code local, lightweight, and community-audited.",
+        "ethicalDilemmas": "Balancing telemetry collections needed for tool optimization with strict user privacy demands."
+      },
+      "story": {
+        "origin": "Created as a personal weekend side project by Linus to solve slow local compilation checks in legacy JS frameworks.",
+        "pivots": "Pivoted from a paid SaaS model back to pure open-source core with paid enterprise plug-ins in 2022.",
+        "challenges": "Competing against venture-backed CLI tools with massive marketing budgets and free native features."
+      }
+    },
+    {
+      "name": "UnitTest.io",
+      "index": 3,
+      "colorGroup": "brown",
+      "marketShare": "0.8%",
+      "valuation": "$5.2M",
+      "purchaseCost": 60,
+      "rentPrices": [4, 20, 60, 180, 320, 450],
+      "stakeCost": 50,
+      "team": {
+        "headcount": "19",
+        "keyExecutives": [
+          {
+            "name": "Marcus Vance",
+            "role": "CEO",
+            "bio": "Boutique agency founder turned SaaS bootstrapper with a focus on developer developer-first productivity tools."
+          },
+          {
+            "name": "Elena Rostova",
+            "role": "CTO",
+            "bio": "Specialist in compilers and AST parsing who previously worked at JetBrains."
+          }
+        ],
+        "structureDescription": "Lean functional team of developers with a small customer support shell.",
+        "hiringTrends": "Adding mid-level full-stack engineers to build integrations for VS Code and JetBrains IDEs.",
+        "culture": "Asynchronous, detail-oriented, with deep respect for clean engineering documentation."
+      },
+      "numbers": {
+        "annualRevenue": "$1.1M",
+        "fundingRaised": "$1.2M",
+        "burnRate": "$60,000 / month",
+        "profitability": "Slightly profitable ($150k ARR net)",
+        "keyAssets": "Proprietary AST analysis engine that instantly maps unit test coverage trends over Git history."
+      },
+      "mission": {
+        "statement": "Eliminate dead test code and guarantee high-impact unit test coverage across modular codebases.",
+        "corePhilosophy": "Quality over quantity; test paths that actually break in production.",
+        "ethicalDilemmas": "The pressure to inflate coverage metrics falsely to satisfy corporate management dashboards."
+      },
+      "story": {
+        "origin": "Spun out of a custom testing harness built for a high-frequency trading firm in London.",
+        "pivots": "Transitioned from on-prem license files to a fully managed multi-tenant cloud dashboard.",
+        "challenges": "SaaS platform inertia makes convincing developers to switch their local test runner ecosystems difficult."
+      }
+    },
+    {
+      "name": "Assertive.AI",
+      "index": 6,
+      "colorGroup": "light-blue",
+      "marketShare": "1.2%",
+      "valuation": "$12M",
+      "purchaseCost": 100,
+      "rentPrices": [6, 30, 90, 270, 400, 550],
+      "stakeCost": 50,
+      "team": {
+        "headcount": "34",
+        "keyExecutives": [
+          {
+            "name": "Julian Thorne",
+            "role": "CEO",
+            "bio": "Former product manager at Atlassian who saw a gap in non-technical QA collaboration tools."
+          },
+          {
+            "name": "Priya Patel",
+            "role": "CTO",
+            "bio": "PhD in Computer Vision who adapted optical character recognition models to dynamic UI changes."
+          }
+        ],
+        "structureDescription": "Product-led development pods combining front-end UX designers and machine learning engineers.",
+        "hiringTrends": "Hiring remote customer success managers to support enterprise self-serve onboarding.",
+        "culture": "Fast-paced, iterative, celebrating continuous deployment and quick feedback loops."
+      },
+      "numbers": {
+        "annualRevenue": "$2.4M",
+        "fundingRaised": "$4.5M (Series A)",
+        "burnRate": "$180,000 / month",
+        "profitability": "Unprofitable",
+        "keyAssets": "Visual Regression AI Engine capable of detecting pixel-perfect layout shifts across 50 simulated viewports."
+      },
+      "mission": {
+        "statement": "Bridging the gap between manual testers and automated test infrastructure using natural language assertions.",
+        "corePhilosophy": "If you can describe the bug in English, you should be able to write the automated test for it.",
+        "ethicalDilemmas": "Deploying LLM-driven test generation that might hallucinate valid-looking but false passing tests."
+      },
+      "story": {
+        "origin": "Founded in a garage in Austin after the founders grew frustrated by Selenium scripts breaking due to trivial CSS class changes.",
+        "pivots": "Pivoted from pure pixel-matching to intelligent DOM element tracking using semantic ML models.",
+        "challenges": "High infrastructure cost associated with spinning up hundreds of headless browsers for dynamic visual tests."
+      }
+    },
+    {
+      "name": "SpecFlow Labs",
+      "index": 8,
+      "colorGroup": "light-blue",
+      "marketShare": "1.5%",
+      "valuation": "$15M",
+      "purchaseCost": 100,
+      "rentPrices": [6, 30, 90, 270, 400, 550],
+      "stakeCost": 50,
+      "team": {
+        "headcount": "41",
+        "keyExecutives": [
+          {
+            "name": "Christian Lindqvist",
+            "role": "CEO",
+            "bio": "Agile methodologies expert and frequent keynote speaker at European software design conferences."
+          },
+          {
+            "name": "Niels Bohr Jr.",
+            "role": "CTO",
+            "bio": "Compiler architect with 15 years in behavior-driven development (BDD) engineering."
+          }
+        ],
+        "structureDescription": "Matrix organization split between enterprise support desks and platform development.",
+        "hiringTrends": "Active recruitment for C# and .NET framework integration experts in Central Europe.",
+        "culture": "Process-driven, analytical, highlighting work-life balance and structured growth paths."
+      },
+      "numbers": {
+        "annualRevenue": "$3.8M",
+        "fundingRaised": "$6M",
+        "burnRate": "$120,000 / month",
+        "profitability": "Highly profitable",
+        "keyAssets": "The premier BDD framework extension suite for corporate enterprise environments running legacy .NET frameworks."
+      },
+      "mission": {
+        "statement": "Transforming business specifications into living documentation that verifies software logic automatically.",
+        "corePhilosophy": "Alignment across product owners, developers, and QA leads is the ultimate form of automated prevention.",
+        "ethicalDilemmas": "Anonymizing corporate user paths uploaded to public telemetry servers during complex enterprise debugging runs."
+      },
+      "story": {
+        "origin": "Spun off from a major Scandinavian IT consultancy to build a commercial ecosystem around a popular open-source BDD framework.",
+        "pivots": "Evolved from a tool-only business to a full collaborative requirements-testing ecosystem platform.",
+        "challenges": "Convincing modern startup developers that structured BDD is worth the upfront writing effort."
+      }
+    },
+    {
+      "name": "RegressionHQ",
+      "index": 9,
+      "colorGroup": "light-blue",
+      "marketShare": "2.1%",
+      "valuation": "$22M",
+      "purchaseCost": 120,
+      "rentPrices": [8, 40, 100, 300, 450, 600],
+      "stakeCost": 50,
+      "team": {
+        "headcount": "55",
+        "keyExecutives": [
+          {
+            "name": "Amanda Vance",
+            "role": "CEO",
+            "bio": "Former VP of QA at a Tier 1 financial institution, specialized in security compliance audits."
+          },
+          {
+            "name": "Dinesh Gupta",
+            "role": "CTO",
+            "bio": "Distributed systems engineer who designed real-time performance clusters for defense contractors."
+          }
+        ],
+        "structureDescription": "Divided into Core Pipeline Integration, Frontend Orchestration, and Security-First Engineering teams.",
+        "hiringTrends": "Onboarding solutions architects to help legacy banks transition from manual excel checklists to automated scripts.",
+        "culture": "Security-focused, zero-defect mentalities, with strict physical and digital isolation policies.",
+      },
+      "numbers": {
+        "annualRevenue": "$5.2M",
+        "fundingRaised": "$10M",
+        "burnRate": "$300,000 / month",
+        "profitability": "Near breakeven",
+        "keyAssets": "SOC2-compliant, air-gapped automated testing pipeline engine optimized for highly regulated banking sectors."
+      },
+      "mission": {
+        "statement": "To automate trust and ensure no regression error slips into critical national and global software networks.",
+        "corePhilosophy": "Continuous automated validation is the first line of cybersecurity defense.",
+        "ethicalDilemmas": "Refusing automated testing contracts for applications designed for civilian surveillance platforms."
+      },
+      "story": {
+        "origin": "Founded after the key team members witnessed a massive retail payment processing outage caused by a single line of unverified code.",
+        "pivots": "Shifted focus from generic regression testing to hyper-secure on-premise regression simulation for financial institutions.",
+        "challenges": "Long enterprise sales cycles and navigating deep security questionnaires from old-guard procurement teams."
+      }
+    },
+    {
+      "name": "MockAPI Systems",
+      "index": 11,
+      "colorGroup": "magenta",
+      "marketShare": "3.5%",
+      "valuation": "$38M",
+      "purchaseCost": 140,
+      "rentPrices": [10, 50, 150, 450, 625, 750],
+      "stakeCost": 100,
+      "team": {
+        "headcount": "78",
+        "keyExecutives": [
+          {
+            "name": "Gavin Belson Jr.",
+            "role": "CEO",
+            "bio": "Silicon Valley native focused on API integrations and microservice developer infrastructure."
+          },
+          {
+            "name": "Yuki Tanaka",
+            "role": "CTO",
+            "bio": "Former API architect at Stripe, author of multiple microservice telemetry specifications."
+          }
+        ],
+        "structureDescription": "API-first development culture organized around protocol teams (gRPC, GraphQL, REST, SOAP).",
+        "hiringTrends": "Hiring Go developers to scale proxy routing infrastructure to handle billions of simulated requests daily.",
+        "culture": "Geeky, developer-centric, valuing API standards, elegant payload patterns, and extreme latency performance.",
+      },
+      "numbers": {
+        "annualRevenue": "$8.9M",
+        "fundingRaised": "$18M (Series B)",
+        "burnRate": "$450,000 / month",
+        "profitability": "Unprofitable",
+        "keyAssets": "Low-latency API virtualization engine capable of mimicking complex, stateful third-party sandboxes instantly."
+      },
+      "mission": {
+        "statement": "Make developers independent of downstream service dependencies during software test cycles.",
+        "corePhilosophy": "Simulated APIs should behave exactly like production environments, error-handling included.",
+        "ethicalDilemmas": "Handling the storage of real production API payloads that developers accidentally upload to generate mock data templates."
+      },
+      "story": {
+        "origin": "Created inside an e-commerce platform where external payment sandbox downtime regularly halted the engineering velocity of 400 developers.",
+        "pivots": "Pivoted from simple stubbing static files to generating dynamic mock data matching active database schemas.",
+        "challenges": "Managing mock-drift where real APIs change structures but MockAPI's configurations remain un-updated."
+      }
+    },
+    {
+      "name": "LoadPulse",
+      "index": 13,
+      "colorGroup": "magenta",
+      "marketShare": "4.2%",
+      "valuation": "$45M",
+      "purchaseCost": 140,
+      "rentPrices": [10, 50, 150, 450, 625, 750],
+      "stakeCost": 100,
+      "team": {
+        "headcount": "92",
+        "keyExecutives": [
+          {
+            "name": "Tariq Mahmood",
+            "role": "CEO",
+            "bio": "Telecommunications veteran who previously managed cellular traffic loads during Olympic broadcast events."
+          },
+          {
+            "name": "Clara Oswald",
+            "role": "CTO",
+            "bio": "Cloud infrastructure engineer with core expertise in high-concurrency node clustering and load distribution."
+          }
+        ],
+        "structureDescription": "Organized into Infrastructure Scaling, Client Telemetry, and Regional Edge Simulation departments.",
+        "hiringTrends": "Looking for DevOps specialists who understand geo-distributed AWS/GCP routing patterns.",
+        "culture": "SLA-focused, high-stress response preparation, treating every client simulation run with mission-critical precision.",
+      },
+      "numbers": {
+        "annualRevenue": "$11.2M",
+        "fundingRaised": "$22M",
+        "burnRate": "$600,000 / month",
+        "profitability": "Profitable (recent transition to positive cash-flow)",
+        "keyAssets": "Global network of over 100 localized load generation nodes capable of spawning 5 million simultaneous virtual users."
+      },
+      "mission": {
+        "statement": "To identify and resolve bottlenecks before actual users ever hit application performance walls.",
+        "corePhilosophy": "True capacity boundaries are only discovered under actual, merciless load stress.",
+        "ethicalDilemmas": "Avoiding client usage of LoadPulse as a distributed denial of service (DDoS) weapon against unauthorized target domains."
+      },
+      "story": {
+        "origin": "Emerged as an internal testing tool for a ticketing giant to ensure sales-launches didn't crash application clusters.",
+        "pivots": "Shifted from scripting load test templates in complex code structures to zero-code visual scenario construction.",
+        "challenges": "High variable costs incurred by spinning up thousands of bare metal machines under high bandwidth spikes."
+      }
+    },
+    {
+      "name": "AppDeploy QA",
+      "index": 14,
+      "colorGroup": "magenta",
+      "marketShare": "5.0%",
+      "valuation": "$55M",
+      "purchaseCost": 160,
+      "rentPrices": [12, 60, 180, 500, 700, 900],
+      "stakeCost": 100,
+      "team": {
+        "headcount": "110",
+        "keyExecutives": [
+          {
+            "name": "Simon de Forest",
+            "role": "CEO",
+            "bio": "Serial enterprise SaaS entrepreneur who sold his previous monitoring business for $150M."
+          },
+          {
+            "name": "Lana Kane",
+            "role": "CTO",
+            "bio": "Pioneer in containerized virtualizations who standardized automated sandbox deployments in Kubernetes."
+          }
+        ],
+        "structureDescription": "Siloed product units (Automated Sandboxes, Database Syncing, PR Previews) reporting to a central executive board.",
+        "hiringTrends": "Aggressive expansion of enterprise enterprise field sales engineers to drive integration pipelines.",
+        "culture": "Sales-driven, professional, highly polished client-facing teams coexisting with deep platform engineers."
+      },
+      "numbers": {
+        "annualRevenue": "$14.5M",
+        "fundingRaised": "$35M",
+        "burnRate": "$850,000 / month",
+        "profitability": "Slightly negative, investing for hyper-growth",
+        "keyAssets": "Proprietary instant environment-cloning technology that copies complex microservice stacks in under 20 seconds."
+      },
+      "mission": {
+        "statement": "Deliver dedicated, isolated staging environments for every branch to automate QA pipelines dynamically.",
+        "corePhilosophy": "No staging congestion; every developer gets an identical sandbox replica automatically.",
+        "ethicalDilemmas": "Navigating corporate data residency rules when staging databases clone actual customer data for testing."
+      },
+      "story": {
+        "origin": "Built to eliminate the bottleneck of 15 developer teams fighting over a single broken physical staging server.",
+        "pivots": "Pivoted from static cloud hosting to transient preview environments that spin down automatically when PRs are closed.",
+        "challenges": "Developing seamless dynamic mock integrations for third-party databases during sandbox instantiations."
+      }
+    },
+    {
+      "name": "DeviceGrid Cloud",
+      "index": 16,
+      "colorGroup": "orange",
+      "marketShare": "6.8%",
+      "valuation": "$85M",
+      "purchaseCost": 180,
+      "rentPrices": [14, 70, 200, 550, 750, 950],
+      "stakeCost": 100,
+      "team": {
+        "headcount": "145",
+        "keyExecutives": [
+          {
+            "name": "Jean-Pierre Durand",
+            "role": "CEO",
+            "bio": "Former operations chief of a major hardware manufacturer with global supply chain expertise."
+          },
+          {
+            "name": "Mei Feng",
+            "role": "CTO",
+            "bio": "Embedded systems genius who designed fast hardware-to-cloud automation controllers."
+          }
+        ],
+        "structureDescription": "Combines cloud software engineers and physical data-center technicians managing robotic device farms.",
+        "hiringTrends": "Hiring hardware interface developers and data center network engineers in major regional hubs.",
+        "culture": "Pragmatic, blending physical manufacturing operations precision with high-scale software deployments.",
+      },
+      "numbers": {
+        "annualRevenue": "$22.0M",
+        "fundingRaised": "$50M",
+        "burnRate": "$1.4M / month",
+        "profitability": "Stable cash-flow positive",
+        "keyAssets": "Massive secure physical data centers containing over 12,000 real iOS and Android smartphones mapped to automated control units."
+      },
+      "mission": {
+        "statement": "Ensure flawless mobile experiences by testing apps on physical devices under actual global network conditions.",
+        "corePhilosophy": "Emulators lie; only actual physical hardware reveals the truth of dynamic memory bottlenecks.",
+        "ethicalDilemmas": "Handling security protocols of client beta applications accessing private physical hardware with potential surveillance chips."
+      },
+      "story": {
+        "origin": "Started as a regional farm of 50 iPhones connected via USB hubs to a single workstation in a basement.",
+        "pivots": "Shifted from purely manual remote device sharing to dynamic API-driven automation utilizing Appium and Espresso.",
+        "challenges": "Sourcing rare legacy and regional handset models to keep the testing farm relevant across worldwide market share shifts."
+      }
+    },
+    {
+      "name": "Simulacra Mobile",
+      "index": 18,
+      "colorGroup": "orange",
+      "marketShare": "7.5%",
+      "valuation": "$98M",
+      "purchaseCost": 180,
+      "rentPrices": [14, 70, 200, 550, 750, 950],
+      "stakeCost": 100,
+      "team": {
+        "headcount": "160",
+        "keyExecutives": [
+          {
+            "name": "Arthur Pendelton",
+            "role": "CEO",
+            "bio": "Mobile gaming executive who oversaw monetization and automation testing loops for Top-50 App Store titles."
+          },
+          {
+            "name": "Sophia Rodriguez",
+            "role": "CTO",
+            "bio": "Expert in virtualization who built custom hypervisors optimized for high-performance mobile operating systems."
+          }
+        ],
+        "structureDescription": "Organized into Emulator Optimization, Interactive UI Frameworks, and Mobile DevOps Integration teams.",
+        "hiringTrends": "Hiring graphics driver specialists and native iOS/Android system level engineers.",
+        "culture": "Creative, highly game-focused, celebrating complex animations and performance optimizations.",
+      },
+      "numbers": {
+        "annualRevenue": "$26.4M",
+        "fundingRaised": "$65M",
+        "burnRate": "$1.8M / month",
+        "profitability": "Unprofitable, scaling aggressively",
+        "keyAssets": "Highly optimized proprietary hypervisor software simulating virtual Android and iOS devices at up to 120 FPS."
+      },
+      "mission": {
+        "statement": "To make mobile app testing instantaneous and infinitely scalable through world-class simulation.",
+        "corePhilosophy": "Simulation is faster, cheaper, and more debuggable than physical device setups when built correctly.",
+        "ethicalDilemmas": "Balancing terms of service with operating system developers who restrict emulator usage to specific proprietary SDK platforms."
+      },
+      "story": {
+        "origin": "Founded as a game performance profiling tool that evolved into an ultra-low latency emulator dashboard for QA specialists.",
+        "pivots": "Pivoted from manual testing consoles to automated parallel continuous integration pipelines for mobile developers.",
+        "challenges": "Keeping pace with the closed iOS ecosystem and proprietary Apple Silicon virtualization constraints."
+      }
+    },
+    {
+      "name": "TestSage AI",
+      "index": 19,
+      "colorGroup": "orange",
+      "marketShare": "8.9%",
+      "valuation": "$120M",
+      "purchaseCost": 200,
+      "rentPrices": [16, 80, 220, 600, 800, 1000],
+      "stakeCost": 100,
+      "team": {
+        "headcount": "185",
+        "keyExecutives": [
+          {
+            "name": "Dr. Alan Turing III",
+            "role": "CEO",
+            "bio": "AI theorist and system developer who specialized in evolutionary neural architectures at Stanford."
+          },
+          {
+            "name": "Rhea Kapoor",
+            "role": "CTO",
+            "bio": "Former lead AI engineer at deep learning startups, designer of context-aware testing agents."
+          }
+        ],
+        "structureDescription": "Dominated by AI/ML research groups working alongside specialized SDK software integration developers.",
+        "hiringTrends": "Aggressive global search for deep learning engineers, generative model researchers, and prompt architects.",
+        "culture": "Highly academic, intellectual, demanding rigorous scientific validation alongside traditional business KPIs.",
+      },
+      "numbers": {
+        "annualRevenue": "$31.0M",
+        "fundingRaised": "$90M (Series C)",
+        "burnRate": "$2.5M / month",
+        "profitability": "Unprofitable",
+        "keyAssets": "Proprietary language model specifically fine-tuned on 100 million public bug reports and pull requests."
+      },
+      "mission": {
+        "statement": "Unlock zero-touch software testing through autonomous AI agents that discover, write, and repair tests dynamically.",
+        "corePhilosophy": "Software should test itself; AI agents can understand UI structures faster than human scriptwriters.",
+        "ethicalDilemmas": "The long-term automation risk of displacing low-level QA engineers and junior developers with autonomous test engines."
+      },
+      "story": {
+        "origin": "Inception came during an academic research venture looking into self-healing software models for mission-critical aircraft autopilots.",
+        "pivots": "Pivoted from code auto-completion to end-to-end self-healing web automation test runners.",
+        "challenges": "Combatting non-deterministic test runs (flakiness) that can arise from fluctuating model generation patterns."
+      }
+    },
+    {
+      "name": "NeuralAssert",
+      "index": 21,
+      "colorGroup": "red",
+      "marketShare": "10.2%",
+      "valuation": "$160M",
+      "purchaseCost": 220,
+      "rentPrices": [18, 90, 250, 700, 875, 1050],
+      "stakeCost": 150,
+      "team": {
+        "headcount": "220",
+        "keyExecutives": [
+          {
+            "name": "Oliver Vance",
+            "role": "CEO",
+            "bio": "Venture builder and former partner at a major tier-one early-stage VC firm."
+          },
+          {
+            "name": "Min-Ji Kim",
+            "role": "CTO",
+            "bio": "Software architecture expert who built automated compiler pipelines for massive enterprise enterprise ERP suites."
+          }
+        ],
+        "structureDescription": "Traditional corporate structure with regional hubs in San Francisco, London, and Seoul.",
+        "hiringTrends": "Expanding enterprise sales operations and developer relations teams to win developer Mindshare.",
+        "culture": "High-achieving, metrics-driven, with strong emphasis on rapid quota expansion and market share growth.",
+      },
+      "numbers": {
+        "annualRevenue": "$42.5M",
+        "fundingRaised": "$115M",
+        "burnRate": "$3.1M / month",
+        "profitability": "Aiming for profitability in 18 months",
+        "keyAssets": "Patented 'Neural Heuristics' engine that tracks live user analytics to generate tests on the most active app paths."
+      },
+      "mission": {
+        "statement": "Aligning developer testing pipelines with actual production usage patterns via continuous feedback loops.",
+        "corePhilosophy": "Real user paths are the only metric that matters when prioritizing test automation pipelines.",
+        "ethicalDilemmas": "Ensuring PII (Personally Identifiable Information) is never leaked or captured during production user tracking loops."
+      },
+      "story": {
+        "origin": "Spun off from an e-commerce intelligence tool that analyzed checkout friction points, realizing those patterns were bugs.",
+        "pivots": "Pivoted from live debugging to predictive continuous testing tools powered by behavioral user logs.",
+        "challenges": "Managing data pipeline scaling when dealing with high-volume enterprise traffic spikes."
+      }
+    },
+    {
+      "name": "AutoQA.io",
+      "index": 23,
+      "colorGroup": "red",
+      "marketShare": "11.5%",
+      "valuation": "$185M",
+      "purchaseCost": 220,
+      "rentPrices": [18, 90, 250, 700, 875, 1050],
+      "stakeCost": 150,
+      "team": {
+        "headcount": "245",
+        "keyExecutives": [
+          {
+            "name": "Sarah Jenkins",
+            "role": "CEO",
+            "bio": "Ex-Director of QA at Microsoft, passionate about eliminating friction in CI/CD developer toolchains."
+          },
+          {
+            "name": "Dr. Aris Thorne",
+            "role": "CTO",
+            "bio": "Distinguished software verification researcher who designed automated theorem provers."
+          }
+        ],
+        "structureDescription": "Geographically distributed team split between product engineering, enterprise services, and AI labs.",
+        "hiringTrends": "Hiring developer relations leads, technical trainers, and enterprise accounts managers.",
+        "culture": "Highly structured, collaborative, emphasizing quality standards, operational manuals, and career progression frameworks.",
+      },
+      "numbers": {
+        "annualRevenue": "$51.0M",
+        "fundingRaised": "$140M",
+        "burnRate": "$3.8M / month",
+        "profitability": "Profitable on an EBITDA basis",
+        "keyAssets": "Unrivaled test execution parallelism engine that safely speeds up enterprise test suites from hours to minutes."
+      },
+      "mission": {
+        "statement": "To make software test suites execute at the speed of human thought.",
+        "corePhilosophy": "Slow test suites destroy developer productivity and erode engineering confidence.",
+        "ethicalDilemmas": "Managing clients who cut corners by relying 100% on fast-passing AI scripts over rigorous manual validations."
+      },
+      "story": {
+        "origin": "Founded by QA engineers tired of waiting 3 hours for regression tests to compile and pass after tiny code changes.",
+        "pivots": "Shifted from a local command-line speed runner to a globally distributed, cloud-native caching test runner.",
+        "challenges": "Managing state synchronizations between massive databases in parallelized test runners."
+      }
+    },
+    {
+      "name": "ShiftLeft Corp",
+      "index": 24,
+      "colorGroup": "red",
+      "marketShare": "13.0%",
+      "valuation": "$210M",
+      "purchaseCost": 240,
+      "rentPrices": [20, 100, 300, 750, 925, 1100],
+      "stakeCost": 150,
+      "team": {
+        "headcount": "280",
+        "keyExecutives": [
+          {
+            "name": "Venkatesh Rao",
+            "role": "CEO",
+            "bio": "Cybersecurity expert and author who served as CTO for multiple critical cloud security platform tools."
+          },
+          {
+            "name": "Emily Watson",
+            "role": "CTO",
+            "bio": "Static application security testing (SAST) pioneer who designed analysis engines for military networks."
+          }
+        ],
+        "structureDescription": "Divided into Static Analysis, Dependency Scanners, Container Auditing, and Enterprise Integration Divisions.",
+        "hiringTrends": "Recruiting advanced security researchers, threat model experts, and enterprise customer engineers.",
+        "culture": "Rigorous, security-first, with deep engineering accountability and zero tolerance for sloppy coding practices.",
+      },
+      "numbers": {
+        "annualRevenue": "$58.2M",
+        "fundingRaised": "$175M",
+        "burnRate": "$4.5M / month",
+        "profitability": "Highly profitable enterprise division",
+        "keyAssets": "State-of-the-art static analysis code scanning engine that catches security vulnerabilities alongside performance regressions."
+      },
+      "mission": {
+        "statement": "Integrate elite security and quality testing directly into the earliest developer workflows.",
+        "corePhilosophy": "Bugs and security flaws are cheapest to repair when caught directly inside the IDE.",
+        "ethicalDilemmas": "Deciding whether to alert developer teams to low-impact open-source vulnerabilities that might cause security alert fatigue."
+      },
+      "story": {
+        "origin": "Formed during an integration partnership where security audits repeatedly delayed major software releases by several months.",
+        "pivots": "Expanded from static security code scanning into full-lifecycle pre-commit pipeline automation.",
+        "challenges": "Preventing developer burnout from excessive alerts and false positives generated by over-sensitive analyzers."
+      }
+    },
+    {
+      "name": "EnterpriseQA",
+      "index": 26,
+      "colorGroup": "yellow",
+      "marketShare": "14.5%",
+      "valuation": "$240M",
+      "purchaseCost": 260,
+      "rentPrices": [22, 110, 330, 800, 975, 1150],
+      "stakeCost": 150,
+      "team": {
+        "headcount": "320",
+        "keyExecutives": [
+          {
+            "name": "Robert MacIntosh",
+            "role": "CEO",
+            "bio": "Ex-managing director at Accenture, expert in corporate restructuring and enterprise IT software sales."
+          },
+          {
+            "name": "Elena Petrova",
+            "role": "CTO",
+            "bio": "Systems architect with deep experience migrating legacy COBOL systems to automated cloud instances."
+          }
+        ],
+        "structureDescription": "Highly structured hierarchical organization with large regional offices in New York, Frankfurt, and Tokyo.",
+        "hiringTrends": "Hiring senior corporate accounts executives, consultants, and enterprise solutions implementation architects.",
+        "culture": "Corporate, professional, focused on compliance, long-term roadmaps, and predictable SLA deliveries.",
+      },
+      "numbers": {
+        "annualRevenue": "$69.5M",
+        "fundingRaised": "$210M",
+        "burnRate": "$5.2M / month",
+        "profitability": "Consistently profitable (12% net margins)",
+        "keyAssets": "The absolute gold standard automated migration testing framework for mainframe systems."
+      },
+      "mission": {
+        "statement": "To derisk legacy software modernization and guarantee operations continuity for global systems.",
+        "corePhilosophy": "Legacy systems power the world; our job is to ensure they never fail during upgrades.",
+        "ethicalDilemmas": "Continuing to charge high licensing fees for legacy systems that clients desperately need to upgrade."
+      },
+      "story": {
+        "origin": "Founded during the modernization wave of the mid-2010s when major insurance carriers struggled to move off mainframes.",
+        "pivots": "Transitioned from custom consulting frameworks to a productized automation software suite for legacy ERPs.",
+        "challenges": "Maintaining compatibility with historical systems while simultaneously offering modern cloud integration tools."
+      }
+    },
+    {
+      "name": "VerifyGroup",
+      "index": 27,
+      "colorGroup": "yellow",
+      "marketShare": "15.8%",
+      "valuation": "$270M",
+      "purchaseCost": 260,
+      "rentPrices": [22, 110, 330, 800, 975, 1150],
+      "stakeCost": 150,
+      "team": {
+        "headcount": "360",
+        "keyExecutives": [
+          {
+            "name": "William Chen",
+            "role": "CEO",
+            "bio": "Former partner at McKinsey focused on digital transformation and software assurance strategy."
+          },
+          {
+            "name": "Chloe Bennett",
+            "role": "CTO",
+            "bio": "Computer scientist specializing in dynamic program analysis and test isolation methods."
+          }
+        ],
+        "structureDescription": "Matrix structure with dedicated vertical business units (Healthcare, Automotive, Finance, Retail).",
+        "hiringTrends": "Recruiting domain-specific software validation experts and enterprise delivery managers.",
+        "culture": "Exacting, analytical, valuing vertical domain knowledge, regulatory compliance, and absolute test accuracy.",
+      },
+      "numbers": {
+        "annualRevenue": "$78.4M",
+        "fundingRaised": "$230M",
+        "burnRate": "$6.0M / month",
+        "profitability": "Strong operating profit margins (15% Net)",
+        "keyAssets": "Broad portfolio of compliance-certified automated testing suites for aerospace, medical, and banking verticals."
+      },
+      "mission": {
+        "statement": "To supply certified, zero-risk test automation solutions to the world's most critical industries.",
+        "corePhilosophy": "In critical software, failure is not an option; verification must be mathematically sound.",
+        "ethicalDilemmas": "Navigating software bugs discovered in client legacy platforms that might require reporting to federal watchdogs."
+      },
+      "story": {
+        "origin": "Began as an aerospace-focused software safety consultancy before expanding into automated testing products for high-liability applications.",
+        "pivots": "Consolidated several niche verification libraries into a unified, FDA- and ISO-certified automation platform.",
+        "challenges": "Adapting modern, fast-moving agile development loops to glacial regulatory certification pathways."
+      }
+    },
+    {
+      "name": "ApexTesting",
+      "index": 29,
+      "colorGroup": "yellow",
+      "marketShare": "17.2%",
+      "valuation": "$310M",
+      "purchaseCost": 280,
+      "rentPrices": [24, 120, 360, 850, 1025, 1200],
+      "stakeCost": 150,
+      "team": {
+        "headcount": "410",
+        "keyExecutives": [
+          {
+            "name": "Rajesh Nair",
+            "role": "CEO",
+            "bio": "Pioneer in global delivery models with 25 years of leadership in automated verification architectures."
+          },
+          {
+            "name": "Nadia Volkov",
+            "role": "CTO",
+            "bio": "Expert in distributed virtualization infrastructure and high-concurrency cloud systems."
+          }
+        ],
+        "structureDescription": "Global engineering divisions backed by extensive field architecture teams located near enterprise clusters.",
+        "hiringTrends": "Aggressive scaling of customer-success engineers and technical accounts directors globally.",
+        "culture": "Customer-centric, execution-focused, demanding high personal accountability and professional client service.",
+      },
+      "numbers": {
+        "annualRevenue": "$89.1M",
+        "fundingRaised": "$280M",
+        "burnRate": "$7.2M / month",
+        "profitability": "Profitable",
+        "keyAssets": "Global network of execution centers and proprietary 'SmartTest' orchestrator reducing test cycle times by 70%."
+      },
+      "mission": {
+        "statement": "To empower global organizations to deliver flawless user experiences at lightning-fast speeds.",
+        "corePhilosophy": "Scale should never break software quality; automated orchestration is the bridge to successful growth.",
+        "ethicalDilemmas": "Balancing automated verification scripts with manual validation jobs when advising legacy corporations on workforce reductions."
+      },
+      "story": {
+        "origin": "Emerged as a spinoff from a major IT infrastructure firm to target the rising demand for scalable enterprise test automation.",
+        "pivots": "Pivoted from pure consulting to a unified platform-as-a-service model, transforming legacy setups to automated pipelines.",
+        "challenges": "Acquiring and integrating smaller niche testing tools while maintaining a cohesive core platform."
+      }
+    },
+    {
+      "name": "CloudSpec Platforms",
+      "index": 31,
+      "colorGroup": "green",
+      "marketShare": "19.0%",
+      "valuation": "$380M",
+      "purchaseCost": 300,
+      "rentPrices": [26, 130, 390, 900, 1100, 1275],
+      "stakeCost": 200,
+      "team": {
+        "headcount": "490",
+        "keyExecutives": [
+          {
+            "name": "Douglas Sterling",
+            "role": "CEO",
+            "bio": "Enterprise platform expert who helped scale some of the earliest cloud management tools to global exits."
+          },
+          {
+            "name": "Yuka Sato",
+            "role": "CTO",
+            "bio": "Distinguished infrastructure systems architect, former cloud platform lead at Amazon Web Services."
+          }
+        ],
+        "structureDescription": "SaaS infrastructure pods, high-performance runtime engineers, and global developer advocacy groups.",
+        "hiringTrends": "Expanding infrastructure teams to optimize bare-metal cluster management and cloud orchestration costs.",
+        "culture": "Technocratic, rapid-paced, pushing for extreme reliability and elegant developer-first workflows.",
+      },
+      "numbers": {
+        "annualRevenue": "$108.0M",
+        "fundingRaised": "$340M",
+        "burnRate": "$9.1M / month",
+        "profitability": "Near breakeven, heavy investing in next-gen platforms",
+        "keyAssets": "Proprietary container runner that executes testing microservices at the absolute physical limits of hypervisor latency."
+      },
+      "mission": {
+        "statement": "Provide the infrastructure framework that powers the world's most ambitious software development pipelines.",
+        "corePhilosophy": "Developers should never think about execution servers; testing platforms should behave like utility water.",
+        "ethicalDilemmas": "Fulfilling resource-heavy regression testing contracts for carbon-intensive mining and exploration systems."
+      },
+      "story": {
+        "origin": "Founded by cloud architects who realized legacy container solutions were too slow and heavy for testing workloads.",
+        "pivots": "Shifted from offering general developer environments to focusing 100% on high-concurrency automated verification.",
+        "challenges": "Managing the volatile compute demands of hundreds of thousands of concurrent development pipelines."
+      }
+    },
+    {
+      "name": "HyperTest Technologies",
+      "index": 32,
+      "colorGroup": "green",
+      "marketShare": "20.5%",
+      "valuation": "$410M",
+      "purchaseCost": 300,
+      "rentPrices": [26, 130, 390, 900, 1100, 1275],
+      "stakeCost": 200,
+      "team": {
+        "headcount": "540",
+        "keyExecutives": [
+          {
+            "name": "Elena Rostova II",
+            "role": "CEO",
+            "bio": "Highly decorated computer systems engineer turned executive, formerly VP of Platform Engineering at Salesforce."
+          },
+          {
+            "name": "David Miller",
+            "role": "CTO",
+            "bio": "Expert in distributed operating systems who authored core container routing standards."
+          }
+        ],
+        "structureDescription": "Functional matrix structure optimized for rapid feature deployment across diverse enterprise workflows.",
+        "hiringTrends": "Hiring remote enterprise solution engineers and global strategic sales executives in EMEA and APAC.",
+        "culture": "Ambitious, performance-driven, balancing high-impact results with a strongly collaborative team environment.",
+      },
+      "numbers": {
+        "annualRevenue": "$121.5M",
+        "fundingRaised": "$380M",
+        "burnRate": "$10.5M / month",
+        "profitability": "Slightly profitable ($12M net income)",
+        "keyAssets": "Highly optimized visual, API, and unit testing runner suite boasting near-zero flakiness ratings."
+      },
+      "mission": {
+        "statement": "Unify all dimensions of software testing into a single, cohesive, high-performance execution plane.",
+        "corePhilosophy": "Eliminating tool fragmentation is the only way to establish true continuous release cycles.",
+        "ethicalDilemmas": "Managing customer pressure to integrate less-secure legacy software systems without modern encryption standards."
+      },
+      "story": {
+        "origin": "Created to replace an assembly of separate tools that required constant maintenance and custom glue scripts.",
+        "pivots": "Consolidated disparate testing pipelines into a unified platform built entirely on unified container layers.",
+        "challenges": "Navigating massive API integrations across hundreds of developer platforms and legacy frameworks."
+      }
+    },
+    {
+      "name": "OmniVerify Systems",
+      "index": 34,
+      "colorGroup": "green",
+      "marketShare": "22.0%",
+      "valuation": "$460M",
+      "purchaseCost": 320,
+      "rentPrices": [28, 150, 450, 1000, 1200, 1400],
+      "stakeCost": 200,
+      "team": {
+        "headcount": "610",
+        "keyExecutives": [
+          {
+            "name": "Arthur Pendelton II",
+            "role": "CEO",
+            "bio": "Corporate turnaround specialist who successfully scaled multiple enterprise infrastructure platforms."
+          },
+          {
+            "name": "Dr. Sarah Patel",
+            "role": "CTO",
+            "bio": "Former lead researcher in machine learning and automated theorem verification at Carnegie Mellon."
+          }
+        ],
+        "structureDescription": "Traditional corporate structure with regional command offices backed by deep technology centers.",
+        "hiringTrends": "Recruiting industry leaders in security compliance, enterprise database operations, and customer support networks.",
+        "culture": "Exacting, professional, highly focused on compliance, long-term roadmaps, and predictable deliveries.",
+      },
+      "numbers": {
+        "annualRevenue": "$138.0M",
+        "fundingRaised": "$420M",
+        "burnRate": "$12.0M / month",
+        "profitability": "Stable profit margins (18% Operating Margin)",
+        "keyAssets": "The world's most widely adopted automated regulatory-compliance testing suite for critical systems."
+      },
+      "mission": {
+        "statement": "To deliver certified, zero-risk software verification solutions to the world's most essential systems.",
+        "corePhilosophy": "In critical software, verification must be mathematically sound; there is no room for compromise.",
+        "ethicalDilemmas": "Balancing continuous deployment velocities with slow, legally mandated security certifications."
+      },
+      "story": {
+        "origin": "Formed to bring automated rigor to legacy medical and aviation platforms that struggled to move off old verification frameworks.",
+        "pivots": "Transformed from an elite consultancy into a unified platform-as-a-service provider for complex regulatory environments.",
+        "challenges": "Reconciling modern cloud continuous integration models with slow and rigorous state certification bodies."
+      }
+    },
+    {
+      "name": "TitanQA Global",
+      "index": 37,
+      "colorGroup": "dark-blue",
+      "marketShare": "28.5%",
+      "valuation": "$850M",
+      "purchaseCost": 350,
+      "rentPrices": [35, 175, 500, 1100, 1300, 1500],
+      "stakeCost": 200,
+      "team": {
+        "headcount": "1200",
+        "keyExecutives": [
+          {
+            "name": "Robert MacIntosh II",
+            "role": "CEO",
+            "bio": "Veteran tech executive who led multiple Fortune 500 business system integrations and market expansions."
+          },
+          {
+            "name": "Niels Bohr III",
+            "role": "CTO",
+            "bio": "Renowned infrastructure systems engineer who designed global-scale automation frameworks."
+          }
+        ],
+        "structureDescription": "Highly structured corporate architecture organized into regional sectors and global product divisions.",
+        "hiringTrends": "Acquisition and integration of specialized tooling start-ups and recruitment of senior systems engineers.",
+        "culture": "Result-oriented, professional, corporate-centric, with high performance standards and strict KPI metrics.",
+      },
+      "numbers": {
+        "annualRevenue": "$245.0M",
+        "fundingRaised": "$650M",
+        "burnRate": "$20.0M / month",
+        "profitability": "Highly profitable ($48M net income)",
+        "keyAssets": "Extensive corporate client portfolio, global IP database of automated testing patterns, and massive server networks."
+      },
+      "mission": {
+        "statement": "To guarantee business continuity and software quality at scale for the world's largest enterprises.",
+        "corePhilosophy": "Quality is the foundation of digital scale; continuous automated testing is the ultimate insurance policy.",
+        "ethicalDilemmas": "Managing global market pricing structures that make advanced testing suites expensive for emerging-market businesses."
+      },
+      "story": {
+        "origin": "Founded as an enterprise merger of several prominent automated testing companies to form a dominant quality assurance conglomerate.",
+        "pivots": "Consolidated individual testing products into a unified corporate quality ecosystem spanning cloud and on-premise solutions.",
+        "challenges": "Managing legacy technical debt from historical acquisitions while keeping the unified platform modern."
+      }
+    },
+    {
+      "name": "VeriFlow Enterprise",
+      "index": 39,
+      "colorGroup": "dark-blue",
+      "marketShare": "35.0%",
+      "valuation": "$1.2B",
+      "purchaseCost": 400,
+      "rentPrices": [50, 200, 600, 1400, 1700, 2000],
+      "stakeCost": 200,
+      "team": {
+        "headcount": "1800",
+        "keyExecutives": [
+          {
+            "name": "Venkatesh Rao II",
+            "role": "CEO",
+            "bio": "Distinguished enterprise leader, former global executive at IBM and multiple SaaS platforms."
+          },
+          {
+            "name": "Dr. Alan Turing IV",
+            "role": "CTO",
+            "bio": "Pioneer in distributed system verification models, holding over 50 patents in software automation."
+          }
+        ],
+        "structureDescription": "Global enterprise model, containing dedicated engineering, research divisions, and enterprise consultant forces.",
+        "hiringTrends": "Expanding enterprise sales teams and global partner integration channels to protect market dominance.",
+        "culture": "Elite, performance-driven, demanding absolute excellence and celebrating market leadership milestones.",
+      },
+      "numbers": {
+        "annualRevenue": "$380.0M",
+        "fundingRaised": "$850M",
+        "burnRate": "$28.0M / month",
+        "profitability": "Highly profitable (22% Net Margins)",
+        "keyAssets": "Unmatched patent portfolio in software automation, exclusive contracts with 90% of the Fortune 100."
+      },
+      "mission": {
+        "statement": "To set the absolute global standard for software quality, security, and continuous delivery pipelines.",
+        "corePhilosophy": "A flawless digital experience is non-negotiable; we provide the absolute assurance layer for modern software.",
+        "ethicalDilemmas": "Navigating anti-trust considerations as a dominant market monopoly in enterprise automated software validation."
+      },
+      "story": {
+        "origin": "Formed through the historic merger of the industry's two largest automated testing rivals, creating the definitive global leader.",
+        "pivots": "Transitioned from on-premises testing licenses to a dominant hybrid-cloud continuous quality assurance ecosystem.",
+        "challenges": "Responding to emerging open-source testing tools that capture market share at the lower developer end."
+      }
+    }
+  ],
+  "platforms": [
+    {
+      "name": "CI/CD Pipeline Transit",
+      "index": 5,
+      "role": "Core CI/CD Runner Platform",
+      "description": "The primary automation transit system that hosts test execution scripts directly within the developer's source control loop.",
+      "purchaseCost": 200,
+      "rentPrices": [25, 50, 100, 200]
+    },
+    {
+      "name": "Dockerized Hub Services",
+      "index": 15,
+      "role": "Containerization Registry & Platform",
+      "description": "Essential infrastructure providing isolated, pre-configured testing containers for immediate local and remote execution.",
+      "purchaseCost": 200,
+      "rentPrices": [25, 50, 100, 200]
+    },
+    {
+      "name": "Kubernetes Test Orchestrator",
+      "index": 25,
+      "role": "Scalable Clustering Platform",
+      "description": "Dynamic testing infrastructure orchestrator that dynamically scales test runner pods based on execution queue volumes.",
+      "purchaseCost": 200,
+      "rentPrices": [25, 50, 100, 200]
+    },
+    {
+      "name": "Serverless Test Grid",
+      "index": 35,
+      "role": "On-Demand Cloud Grid Platform",
+      "description": "Next-generation serverless platform running thousands of parallel micro-tests with near-zero cold start overhead.",
+      "purchaseCost": 200,
+      "rentPrices": [25, 50, 100, 200]
+    }
+  ],
+  "utilities": [
+    {
+      "name": "Telemetry Flow",
+      "index": 12,
+      "role": "Data Reporting & Analytics Utility",
+      "description": "The analytical utility tracking test execution trends, flakiness indices, and bug tracking alerts in real-time.",
+      "purchaseCost": 150
+    },
+    {
+      "name": "Database Seeding Sync",
+      "index": 28,
+      "role": "Database Virtualization Utility",
+      "description": "Critical data utility managing state initialization, clean rollbacks, and virtual schema syncs during automated tests.",
+      "purchaseCost": 150
+    }
+  ],
+  "chanceEvents": [
+    {
+      "title": "AI Test-Generation Breakthrough",
+      "description": "Your AI agents autonomously discover and repair 50 major application bugs. Market sentiment surges.",
+      "effect": {
+        "type": "cash",
+        "value": 150,
+        "target": "current"
+      }
+    },
+    {
+      "title": "Staging Server Congestion Outage",
+      "description": "Your pipeline runners stall due to lack of environment resources. Pay maintenance repairs to clean up node caching.",
+      "effect": {
+        "type": "repairs",
+        "value": 50,
+        "target": "current"
+      }
+    },
+    {
+      "title": "Open Source Framework Upgrade",
+      "description": "A major underlying testing framework changes its syntax. All your competitors must scramble to update integrations. Receive market share adjustments.",
+      "effect": {
+        "type": "marketShare",
+        "value": 2,
+        "target": "all"
+      }
+    }
+  ],
+  "chestEvents": [
+    {
+      "title": "Series B Funding Secured",
+      "description": "Venture Capital firms inject growth capital into your automation platform.",
+      "effect": {
+        "type": "cash",
+        "value": 200,
+        "target": "current"
+      }
+    },
+    {
+      "title": "Compliance Audit Failure",
+      "description": "An automated testing suite falsely flagged a secure API, delaying a critical enterprise release. Pay compliance fine.",
+      "effect": {
+        "type": "cash",
+        "value": -100,
+        "target": "current"
+      }
+    },
+    {
+      "title": "Strategic Acquisition",
+      "description": "You buy out a local open-source wrapper tool to consolidate market share and capture intellectual property.",
+      "effect": {
+        "type": "move",
+        "value": 1,
+        "target": "current"
+      }
+    }
+  ]
+}

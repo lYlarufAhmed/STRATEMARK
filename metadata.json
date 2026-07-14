@@ -1,0 +1,6 @@
+{
+  "name": "Stratemark",
+  "description": "An immersive market analysis board game and research tool that turns business niches into interactive Monopoly boards. Analyze companies, deep-dive into financials, team structures, and founder stories as a strategic CEO.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

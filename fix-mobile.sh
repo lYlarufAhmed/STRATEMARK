@@ -1,0 +1,1 @@
+sed -i 's/<div className="flex-1 overflow-hidden flex flex-col md:flex-row relative bg-white">/<div className="flex-1 overflow-y-auto md:overflow-hidden flex flex-col md:flex-row relative bg-white">/' src/components/ResearchPortal.tsx
