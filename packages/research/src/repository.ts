@@ -776,4 +776,79 @@ export class GeminiRepository implements MarketIntelRepository {
   private emit(event: DeckRefreshEvent): void {
     for (const l of this.listeners) l(event);
   }
+
+  exportBrain(): Promise<boolean> {
+    const g = globalThis as unknown as {
+      document?: {
+        createElement: (tag: string) => { setAttribute: (k: string, v: string) => void; click: () => void; remove: () => void };
+        body: { appendChild: (node: unknown) => void };
+      };
+    };
+    if (typeof g.document !== 'undefined') {
+      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(this.snap, null, 2));
+      const downloadAnchor = g.document.createElement('a');
+      downloadAnchor.setAttribute('href', dataStr);
+      downloadAnchor.setAttribute('download', 'stratemark-brain.json');
+      g.document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      return Promise.resolve(true);
+    }
+    return Promise.resolve(false);
+  }
+
+  async importBrain(): Promise<boolean> {
+    const g = globalThis as unknown as {
+      document?: {
+        createElement: (tag: string) => {
+          type: string;
+          accept: string;
+          onchange: ((e: { target: { files?: ArrayLike<unknown> | null } }) => void) | null;
+          click: () => void;
+        };
+      };
+      FileReader?: new () => {
+        onload: ((e: { target?: { result?: string | null } }) => void) | null;
+        readAsText: (file: unknown) => void;
+      };
+    };
+    if (!g.document || !g.FileReader) return false;
+    const doc = g.document;
+    const FR = g.FileReader;
+    return new Promise((resolve) => {
+      const fileInput = doc.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = '.json,.stratemark';
+      fileInput.onchange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return resolve(false);
+        const reader = new FR();
+        reader.onload = (event) => {
+          try {
+            const raw = JSON.parse(event.target?.result as string) as RepoSnapshot;
+            if (!raw || !Array.isArray(raw.markets)) return resolve(false);
+            this.snap = normalize(raw);
+            this.persist();
+            const mId = raw.markets[0]?.id ?? '';
+            const deck = raw.decks.find((d) => d.marketId === mId);
+            if (mId && deck) {
+              this.emit({
+                marketId: mId,
+                deckId: deck.id,
+                refreshedAt: new Date().toISOString(),
+                addedCardIds: [],
+                updatedCardIds: [],
+                prunedCardIds: [],
+              });
+            }
+            resolve(true);
+          } catch {
+            resolve(false);
+          }
+        };
+        reader.readAsText(file as Blob);
+      };
+      fileInput.click();
+    });
+  }
 }

@@ -2,22 +2,68 @@ import { useState } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
+  Database,
+  Download,
   ExternalLink,
   KeyRound,
   Loader2,
   ShieldCheck,
   Trash2,
+  Upload,
 } from 'lucide-react';
 import { createGeminiClient } from '@mi/research';
 import { looksLikeGeminiKey, sanitizeApiKey, useApiKey } from '@/lib/settings/apiKey';
+import { useRepository } from '@/lib/repository/RepositoryProvider';
 
 type TestState = { status: 'idle' | 'testing' | 'ok' | 'fail'; detail?: string };
 
 export default function SettingsPage() {
+  const repo = useRepository();
   const { apiKey, model, hasKey, setApiKey, setModel, clear } = useApiKey();
   const [draft, setDraft] = useState(apiKey);
   const [saved, setSaved] = useState(false);
   const [test, setTest] = useState<TestState>({ status: 'idle' });
+  const [brainStatus, setBrainStatus] = useState<{
+    type: 'idle' | 'loading' | 'success' | 'error';
+    message?: string;
+  }>({ type: 'idle' });
+
+  const handleExport = async () => {
+    if (!repo.exportBrain) return;
+    setBrainStatus({ type: 'loading', message: 'Exporting research brain snapshot…' });
+    try {
+      const ok = await repo.exportBrain();
+      if (ok) {
+        setBrainStatus({ type: 'success', message: 'Research brain exported successfully!' });
+      } else {
+        setBrainStatus({ type: 'idle' });
+      }
+    } catch {
+      setBrainStatus({ type: 'error', message: 'Failed to export research brain snapshot.' });
+    }
+  };
+
+  const handleImport = async () => {
+    if (!repo.importBrain) return;
+    setBrainStatus({ type: 'loading', message: 'Importing research brain snapshot…' });
+    try {
+      const ok = await repo.importBrain();
+      if (ok) {
+        setBrainStatus({
+          type: 'success',
+          message: 'Research brain imported successfully! Reloading application data…',
+        });
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        setBrainStatus({ type: 'idle' });
+      }
+    } catch {
+      setBrainStatus({
+        type: 'error',
+        message: 'Failed to import research brain snapshot. Invalid file format.',
+      });
+    }
+  };
 
   const save = () => {
     setApiKey(draft);
@@ -186,6 +232,52 @@ export default function SettingsPage() {
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
           Your key is stored only in this browser and sent only to Google’s API. It is never logged
           or shared. In the desktop build it moves to the OS keychain.
+        </div>
+      </div>
+
+      <div className="panel mt-6 space-y-4 p-6">
+        <div className="flex items-center gap-2">
+          <Database className="h-5 w-5 text-primary-ink" />
+          <h2 className="font-display text-lg text-content">Research Brain Backup & Portability</h2>
+        </div>
+        <p className="text-sm text-muted">
+          Export your complete local research database (markets, decks, cards, metrics, reports, and Q&A research threads) or import a snapshot backup file.
+        </p>
+
+        {brainStatus.type !== 'idle' && (
+          <div
+            className={
+              brainStatus.type === 'success'
+                ? 'flex items-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-800'
+                : brainStatus.type === 'error'
+                  ? 'flex items-center gap-2 rounded-lg border border-negative/40 bg-red-50 px-3 py-2 text-sm text-red-800'
+                  : 'flex items-center gap-2 rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-muted'
+            }
+          >
+            {brainStatus.type === 'loading' && <Loader2 className="h-4 w-4 animate-spin shrink-0" />}
+            {brainStatus.type === 'success' && <CheckCircle2 className="h-4 w-4 shrink-0" />}
+            {brainStatus.type === 'error' && <AlertTriangle className="h-4 w-4 shrink-0" />}
+            <span>{brainStatus.message}</span>
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center gap-3 pt-2">
+          <button
+            type="button"
+            className="btn-primary flex items-center gap-2"
+            onClick={handleExport}
+            disabled={brainStatus.type === 'loading'}
+          >
+            <Download className="h-4 w-4" /> Export Brain Snapshot
+          </button>
+          <button
+            type="button"
+            className="btn-secondary flex items-center gap-2"
+            onClick={handleImport}
+            disabled={brainStatus.type === 'loading'}
+          >
+            <Upload className="h-4 w-4" /> Import Brain Snapshot
+          </button>
         </div>
       </div>
 
