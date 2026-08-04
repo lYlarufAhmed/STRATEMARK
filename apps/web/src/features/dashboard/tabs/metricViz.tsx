@@ -26,15 +26,28 @@ import {
   type TimePoint,
 } from '@mi/contracts';
 import { cn } from '@/lib/cn';
-import { CHART, tint } from '@/lib/theme';
+import { chartTheme, tint, type ChartTheme } from '@/lib/theme';
+import { useTheme } from '@/lib/settings/theme';
 
-export const TOOLTIP_STYLE = {
-  background: CHART.tooltipBg,
-  border: `1px solid ${CHART.tooltipBorder}`,
-  borderRadius: 8,
-  color: CHART.tooltipText,
-  fontSize: 12,
-} as const;
+/**
+ * The chart palette for the theme currently on screen.
+ *
+ * This used to be a module-level constant, which meant it was frozen to the
+ * light palette at import time and could never respond to a theme change.
+ */
+function useChartTheme(): ChartTheme {
+  return chartTheme(useTheme((s) => s.resolved) === 'dark');
+}
+
+function tooltipStyle(c: ChartTheme) {
+  return {
+    background: c.tooltipBg,
+    border: `1px solid ${c.tooltipBorder}`,
+    borderRadius: 8,
+    color: c.tooltipText,
+    fontSize: 12,
+  } as const;
+}
 
 /** Measure-once container so recharts gets a real pixel width. */
 export function useWidth(): readonly [React.RefObject<HTMLDivElement>, number] {
@@ -202,6 +215,7 @@ export function TrendArea({
   estimated?: boolean;
 }) {
   const id = useId().replace(/[:]/g, '');
+  const c = useChartTheme();
   return (
     <AreaChart width={width} height={height} data={data} margin={{ top: 8, right: 12, bottom: 0, left: 4 }}>
       <defs>
@@ -210,10 +224,10 @@ export function TrendArea({
           <stop offset="100%" stopColor={color} stopOpacity={0.02} />
         </linearGradient>
       </defs>
-      <CartesianGrid stroke={CHART.grid} strokeDasharray="3 3" vertical={false} />
-      <XAxis dataKey="period" stroke={CHART.axis} fontSize={10.5} tickLine={false} axisLine={false} />
+      <CartesianGrid stroke={c.grid} strokeDasharray="3 3" vertical={false} />
+      <XAxis dataKey="period" stroke={c.axis} fontSize={10.5} tickLine={false} axisLine={false} />
       <YAxis
-        stroke={CHART.axis}
+        stroke={c.axis}
         fontSize={10.5}
         tickLine={false}
         axisLine={false}
@@ -221,7 +235,7 @@ export function TrendArea({
         tickFormatter={fmt}
         domain={['auto', 'auto']}
       />
-      <ReTooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number) => (fmt ? fmt(v) : v)} />
+      <ReTooltip contentStyle={tooltipStyle(c)} formatter={(v: number) => (fmt ? fmt(v) : v)} />
       <Area
         type="monotone"
         dataKey="value"
@@ -252,6 +266,7 @@ export function CompositionDonut({
 }) {
   const sorted = [...slices].sort((a, b) => b.pct - a.pct);
   const donut = Math.min(height, Math.max(120, width * 0.4));
+  const c = useChartTheme();
   return (
     <div className="flex items-center gap-4">
       <PieChart width={donut} height={height}>
@@ -264,14 +279,14 @@ export function CompositionDonut({
           innerRadius={donut / 2 - 26}
           outerRadius={donut / 2 - 8}
           strokeWidth={2}
-          stroke="#ffffff"
+          stroke={c.sliceStroke}
           isAnimationActive={false}
         >
           {sorted.map((_, i) => (
             <Cell key={i} fill={palette[i % palette.length]!} />
           ))}
         </Pie>
-        <ReTooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number) => `${v}%`} />
+        <ReTooltip contentStyle={tooltipStyle(c)} formatter={(v: number) => `${v}%`} />
       </PieChart>
       {/* Direct labels beside the mark — no distant legend. */}
       <ul className="min-w-0 flex-1 space-y-1.5">

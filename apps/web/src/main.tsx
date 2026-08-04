@@ -6,7 +6,7 @@ import { RepositoryProvider } from '@/lib/repository/RepositoryProvider';
 import { AuthProvider } from '@/lib/auth/AuthContext';
 import { createQueryClient } from '@/lib/query/queryClient';
 import { ErrorBoundary } from '@/components/states/ErrorBoundary';
-import { DeepDiveProvider } from '@/features/deepdive/DeepDive';
+import { DeepDiveProviderWithPanel } from '@/features/deepdive/DeepDive';
 import './index.css';
 
 const queryClient = createQueryClient();
@@ -17,9 +17,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <RepositoryProvider>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <DeepDiveProvider>
+            <DeepDiveProviderWithPanel>
               <App />
-            </DeepDiveProvider>
+            </DeepDiveProviderWithPanel>
           </AuthProvider>
         </QueryClientProvider>
       </RepositoryProvider>

@@ -47,7 +47,7 @@ describe('end-to-end deck flow (markets → deck → 2-level split → card → 
     // Level 0 — full deck with the persistent card-type nav. Filtering happens
     // in place now, so verify the nav renders and then group by tier directly
     // (the old drill-down screen is gone).
-    expect(await screen.findByRole('button', { name: /all cards/i }, FIND)).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /^all\b/i }, FIND)).toBeInTheDocument();
     const tierBtn = await screen.findByRole('button', { name: /group by tier/i }, FIND);
     await user.click(tierBtn);
 
@@ -59,7 +59,7 @@ describe('end-to-end deck flow (markets → deck → 2-level split → card → 
     const card = await screen.findByRole('button', { name: /GraceWear Global/ }, FIND);
     await user.click(card);
     const dialog = await screen.findByRole('dialog', undefined, FIND);
-    await user.click(within(dialog).getByRole('button', { name: /open full dashboard/i }));
+    await user.click(within(dialog).getByRole('button', { name: /dashboard/i }));
 
     // Dashboard — overview content + tab switch to Metrics.
     expect(await screen.findByText(/What they do/i, undefined, FIND)).toBeInTheDocument();

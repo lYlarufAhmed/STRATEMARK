@@ -1,38 +1,71 @@
 /** @type {import('tailwindcss').Config} */
+
+/*
+ * Semantic colors are CSS-variable backed so a single `.dark` class on <html>
+ * reflows the whole app — no `dark:` variant needed on the 460+ existing
+ * utility usages across 39 files.
+ *
+ * The `rgb(var(--x) / <alpha-value>)` form (rather than a hex inside the
+ * variable) is required because opacity modifiers are in real use:
+ * `bg-surface/40`, `text-content/80`, `border-border/60`. A hex-valued variable
+ * silently breaks those. Variables therefore hold space-separated RGB channels.
+ *
+ * Palettes live in src/index.css — `:root` is light, `.dark` is dark.
+ */
+const v = (name) => `rgb(var(${name}) / <alpha-value>)`;
+
 export default {
+  darkMode: 'class',
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        // Light, minimalist palette (ref: Pixel Rise). Warm off-white canvas,
-        // white panels, near-black ink, vivid orange accent.
-        bg: '#EDECE8',
-        surface: '#FFFFFF',
-        'surface-2': '#F5F4F1',
-        border: '#E5E3DD',
-        content: '#18181B',
-        // Darkened so body/muted text clears WCAG AA (4.5:1) on the warm canvas.
-        muted: '#57575E',
-        faint: '#6E6E76',
-        // Orange accent used for highlights, active states, the logo, card
-        // accents. Buttons use `ink` (black) with white text for AA contrast.
-        primary: { DEFAULT: '#F15A24', fg: '#FFFFFF', ink: '#B7441A' },
-        ink: '#18181B',
-        positive: '#16A34A',
-        neutral: '#CA8A04',
-        negative: '#DC2626',
+        // Canvas → panel → raised panel, then hairline.
+        bg: v('--c-bg'),
+        surface: v('--c-surface'),
+        'surface-2': v('--c-surface-2'),
+        border: v('--c-border'),
+        // Ink scale. `muted` and `faint` clear WCAG AA (4.5:1) against
+        // `surface` in BOTH themes.
+        content: v('--c-content'),
+        muted: v('--c-muted'),
+        faint: v('--c-faint'),
+        // Orange accent: highlights, active states, the logo, card accents.
+        // The `ink` variant is the AA-safe color for orange text on canvas.
+        primary: {
+          DEFAULT: v('--c-primary'),
+          fg: v('--c-primary-fg'),
+          ink: v('--c-primary-ink'),
+        },
+        // The high-contrast pill (ref: "Login/Register"). Near-black on light,
+        // near-white on dark — so its foreground must flip too, hence an object
+        // rather than the flat color this used to be.
+        ink: {
+          DEFAULT: v('--c-ink'),
+          fg: v('--c-ink-fg'),
+          hover: v('--c-ink-hover'),
+        },
+        positive: v('--c-positive'),
+        neutral: v('--c-neutral'),
+        negative: v('--c-negative'),
       },
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['"Space Grotesk"', 'Inter', 'ui-sans-serif', 'sans-serif'],
+        sans: ['"Google Sans Flex"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['Parkinsans', '"Google Sans Flex"', 'ui-sans-serif', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
       },
+      // Shadows are variables too: the light theme's soft grey lifts read as
+      // muddy smears on a dark canvas, so dark deepens them instead.
       boxShadow: {
-        card: '0 1px 2px rgba(17,17,26,0.04), 0 12px 28px -16px rgba(17,17,26,0.18)',
-        'card-hover': '0 2px 6px rgba(17,17,26,0.06), 0 26px 50px -20px rgba(17,17,26,0.28)',
-        soft: '0 1px 2px rgba(17,17,26,0.05), 0 6px 16px -10px rgba(17,17,26,0.14)',
+        card: 'var(--s-card)',
+        'card-hover': 'var(--s-card-hover)',
+        soft: 'var(--s-soft)',
       },
-      borderRadius: { xl2: '1.25rem' },
+      borderRadius: {
+        xl2: '1rem',
+        '2xl': '1rem',
+        '3xl': '1.5rem',
+      },
     },
   },
   plugins: [],

@@ -15,7 +15,8 @@ export const METRIC_COLORS: Record<MetricType, string> = {
   employees: '#14B8A6', // teal
 };
 
-/** Maturity tier scale (light mode), cool → warm as maturity rises. */
+/** Maturity tier scale, cool → warm as maturity rises. Saturated enough to hold
+ *  up on both the light and dark canvases, so it isn't theme-switched. */
 export const TIER_COLORS: Record<MaturityTier, string> = {
   1: '#64748B', // slate
   2: '#0EA5E9', // sky
@@ -33,14 +34,46 @@ export const SENTIMENT_COLORS = {
   negative: '#DC2626',
 } as const;
 
-/** Recharts styling for the light theme. */
-export const CHART = {
-  axis: '#9A9AA1',
-  grid: '#ECEAE4',
+/**
+ * Recharts styling, per theme.
+ *
+ * This is the one spot where theming can't ride on CSS variables: Recharts emits
+ * these as SVG presentation attributes (`stroke="…"`), and `var(--x)` doesn't
+ * resolve inside an attribute value. So the chart palette gets selected in JS.
+ * Values mirror the CSS tokens named beside them — keep in sync with the `.dark`
+ * block in index.css.
+ */
+export interface ChartTheme {
+  axis: string;
+  grid: string;
+  tooltipBg: string;
+  tooltipBorder: string;
+  tooltipText: string;
+  /** Separator between adjacent donut slices — reads as the panel behind them. */
+  sliceStroke: string;
+}
+
+const CHART_LIGHT: ChartTheme = {
+  axis: '#AEAEB2', // --c-faint
+  grid: '#F0F0F2', // subtler than the border
   tooltipBg: '#FFFFFF',
-  tooltipBorder: '#E5E3DD',
-  tooltipText: '#18181B',
-} as const;
+  tooltipBorder: '#E5E5E7', // --c-border
+  tooltipText: '#1D1D1F', // --c-content
+  sliceStroke: '#FFFFFF',
+};
+
+const CHART_DARK: ChartTheme = {
+  axis: '#8E8E93', // --c-faint
+  grid: '#2C2C2E', // --c-surface-2
+  tooltipBg: '#2C2C2E',
+  tooltipBorder: '#38383A', // --c-border
+  tooltipText: '#F5F5F7', // --c-content
+  sliceStroke: '#1C1C1E', // --c-surface
+};
+
+export function chartTheme(isDark: boolean): ChartTheme {
+  return isDark ? CHART_DARK : CHART_LIGHT;
+}
 
 /** Hex + alpha → rgba() string, for subtle tinted fills. */
 export function tint(hex: string, alpha: number): string {

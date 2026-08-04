@@ -1,10 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, MapPin, PlusCircle, RefreshCw } from 'lucide-react';
+import { ArrowRight, MapPin, PlusCircle } from 'lucide-react';
 import { useMarkets } from '@/hooks/data';
 import { QueryBoundary } from '@/components/states/QueryBoundary';
 import { CardGridSkeleton } from '@/components/states/Skeleton';
 import { EmptyState } from '@/components/states/EmptyState';
-import { REFRESH_CADENCE_LABELS } from '@mi/contracts';
 
 export default function MarketsListPage() {
   const markets = useMarkets();
@@ -32,7 +31,7 @@ export default function MarketsListPage() {
         empty={
           <EmptyState
             title="No decks yet"
-            description="Describe a market in plain language and we’ll research it into a deck of cards."
+            description="Describe a market in plain language and we'll research it into a deck of cards."
             action={
               <Link to="/markets/new" className="btn-primary mt-2">
                 <PlusCircle className="h-4 w-4" />
@@ -56,18 +55,12 @@ export default function MarketsListPage() {
                     <ArrowRight className="h-5 w-5 shrink-0 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-content" />
                   </div>
                   <p className="mt-1 text-sm text-muted">{m.scopeDefinition.vertical}</p>
-                  <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted">
-                    {m.scopeDefinition.geography && (
-                      <span className="chip border-border">
-                        <MapPin className="h-3.5 w-3.5" />
-                        {m.scopeDefinition.geography}
-                      </span>
-                    )}
-                    <span className="chip border-border">
-                      <RefreshCw className="h-3.5 w-3.5" />
-                      {REFRESH_CADENCE_LABELS[m.refreshCadence]}
-                    </span>
-                  </div>
+                  {m.scopeDefinition.geography && (
+                    <p className="mt-3 flex items-center gap-1.5 text-xs text-faint">
+                      <MapPin className="h-3 w-3" />
+                      {m.scopeDefinition.geography}
+                    </p>
+                  )}
                 </button>
               </li>
             ))}

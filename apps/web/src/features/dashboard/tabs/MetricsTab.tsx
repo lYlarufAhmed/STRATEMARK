@@ -134,12 +134,9 @@ function MetricTile({
   companyName: string;
   children: React.ReactNode;
 }) {
-  const color = METRIC_COLORS[metric.metricType];
   const [editing, setEditing] = useState(false);
   return (
-    <div className="panel overflow-hidden p-0">
-      <div className="h-1 w-full" style={{ background: color }} />
-      <div className="flex h-[calc(100%-4px)] flex-col p-4">
+    <div className="panel flex flex-col p-5">
         <div className="flex items-center justify-between gap-2">
           <span className="text-[10px] font-semibold uppercase tracking-widest text-muted">
             {METRIC_TYPE_LABELS[metric.metricType]}
@@ -200,11 +197,9 @@ function MetricTile({
             />
           </div>
         </div>
-      </div>
     </div>
   );
 }
-
 /** Honest gap: unknown is a finding, not a blank (design system §4). */
 function UnknownSlot() {
   return (

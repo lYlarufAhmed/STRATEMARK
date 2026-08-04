@@ -1,11 +1,11 @@
 import { NavLink } from 'react-router-dom';
-import { FileText, LayoutGrid, PlusCircle, Layers, Settings } from 'lucide-react';
+import { FileText, Layers, LayoutGrid, PlusCircle, Settings } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useApiKey } from '@/lib/settings/apiKey';
 
 const NAV = [
   { to: '/', label: 'Decks', icon: LayoutGrid, end: true },
-  { to: '/markets/new', label: 'New deck', icon: PlusCircle, end: false },
+  { to: '/markets/new', label: 'New Deck', icon: PlusCircle, end: false },
   { to: '/reports', label: 'Reports', icon: FileText, end: false },
   { to: '/settings', label: 'Settings', icon: Settings, end: false },
 ];
@@ -13,18 +13,18 @@ const NAV = [
 export function Sidebar() {
   const hasKey = useApiKey((s) => s.hasKey);
   return (
-    <aside className="flex w-60 shrink-0 flex-col border-r border-border bg-surface/60 px-3 py-4">
-      <div className="mb-6 flex items-center gap-2 px-2">
-        <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-fg">
-          <Layers className="h-5 w-5" aria-hidden />
+    <aside className="flex w-56 shrink-0 flex-col border-r border-border bg-surface px-3 py-5">
+      {/* Logo — compact icon + text */}
+      <div className="mb-8 flex items-center gap-2.5 px-3">
+        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-surface-2">
+          <Layers className="h-4 w-4 text-content" aria-hidden />
         </div>
-        <div className="leading-tight">
-          <div className="font-display text-sm font-semibold text-content">Market Intel</div>
-          <div className="text-xs text-muted">Deck Builder</div>
-        </div>
+        <span className="font-display text-[15px] font-semibold tracking-tight text-content">
+          Stratemark
+        </span>
       </div>
 
-      <nav className="flex flex-col gap-1" aria-label="Primary">
+      <nav className="flex flex-col gap-0.5" aria-label="Primary">
         {NAV.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
@@ -32,9 +32,9 @@ export function Sidebar() {
             end={end}
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                'flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] font-medium transition-colors',
                 isActive
-                  ? 'bg-primary/15 text-content'
+                  ? 'bg-surface-2 text-content'
                   : 'text-muted hover:bg-surface-2 hover:text-content',
               )
             }
@@ -45,19 +45,19 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="mt-auto px-2 pt-4">
+      <div className="mt-auto px-3 pt-4">
         {hasKey ? (
-          <span className="chip border-emerald-300 bg-emerald-50 text-emerald-700">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            Live research
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-positive">
+            <span className="h-1.5 w-1.5 rounded-full bg-positive" />
+            Connected
           </span>
         ) : (
           <NavLink
             to="/settings"
-            className="chip border-amber-300 bg-amber-50 text-amber-800 hover:brightness-110"
+            className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted hover:text-content"
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-            Demo mode · add key
+            <span className="h-1.5 w-1.5 rounded-full bg-neutral" />
+            Demo mode
           </NavLink>
         )}
       </div>

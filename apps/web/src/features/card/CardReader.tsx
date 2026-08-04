@@ -3,7 +3,7 @@ import { LayoutDashboard, ExternalLink } from 'lucide-react';
 import { METRIC_TYPE_LABELS, isSignalCardType, publisherOf, type CardWithCompany } from '@mi/contracts';
 import { Modal } from '@/components/ui/Modal';
 import { formatMetricValue } from '@/lib/format';
-import { GameCard } from './GameCard';
+import { Logo } from './Logo';
 import { ConfidenceBadge } from './ConfidenceBadge';
 import { CmsBreakdown } from './CmsBreakdown';
 import { ViceClaims } from './ViceClaims';
@@ -12,10 +12,9 @@ import { DigDeeper, useDeepDive } from '@/features/deepdive/DeepDive';
 import { FactCheck } from '@/features/factcheck/FactCheck';
 
 /**
- * The card reader — wide, everything visible at once (the founder's audit:
- * "you shouldn't really have to scroll"). Company cards read in three panes:
- * the card itself · its evidence · its score. Market-level cards (Insight,
- * Barrier) read as a claim with its key points and source.
+ * The card reader — full-width, responsive layout. No longer shows a miniature
+ * card inside a modal; instead shows the company's data directly with the logo
+ * inline, using the full available width.
  */
 export function CardReader({
   data,
@@ -28,7 +27,6 @@ export function CardReader({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   deckUserValues: number[];
-  /** When present, "Open full dashboard" hands the dashboard a real way back. */
   marketId?: string;
 }) {
   const navigate = useNavigate();
@@ -41,101 +39,99 @@ export function CardReader({
   const isMarketCard = !company;
   const isCompanyScored = card.cardType !== 'barrier' && card.tier != null;
 
-  // ---- Market-level reader: the claim, its key points, its evidence --------
+  // ---- Market-level reader ------------------------------------------------
   if (isMarketCard) {
     const cited = card.citations?.[0];
     return (
-      <Modal open={open} onOpenChange={onOpenChange} title={title} size="xl">
-        <div className="grid gap-6 md:grid-cols-[240px_1fr]">
-          <div className="mx-auto w-full max-w-[240px]">
-            <GameCard data={data} />
-          </div>
-          <div className="space-y-4">
-            {card.summary && (
-              <p className="text-sm leading-relaxed text-content">{card.summary}</p>
-            )}
-            {card.keyPoints.length > 0 && (
-              <div className="panel-2 p-4">
-                <h4 className="mb-3 font-display text-sm font-semibold text-content">Key points</h4>
-                <ol className="space-y-2.5">
-                  {card.keyPoints.map((k, i) => (
-                    <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-content">
-                      <span className="mt-0.5 h-5 w-5 shrink-0 rounded-full bg-surface-2 text-center font-display text-[11px] font-bold leading-5 text-muted">
-                        {i + 1}
-                      </span>
-                      {k}
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            )}
-            <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
-              <span>{cited ? `Source: ${publisherOf(cited.url, cited.title)}` : 'No source recorded'}</span>
-              <button
-                type="button"
-                className="btn-primary ml-auto px-3 py-1.5 text-xs"
-                onClick={() => {
-                  onOpenChange(false);
-                  chat(
-                    { kind: 'cards', deckId: card.deckId, cardIds: [card.id], subject: card.title },
-                    { seed: `Dig into "${card.title}" — what's the full picture, and what changed recently?` },
-                  );
-                }}
-              >
-                Dig deeper
-              </button>
+      <Modal open={open} onOpenChange={onOpenChange} title={title} size="lg">
+        <div className="space-y-4">
+          {card.summary && (
+            <p className="text-sm leading-relaxed text-content">{card.summary}</p>
+          )}
+          {card.keyPoints.length > 0 && (
+            <div className="rounded-xl border border-border bg-surface-2 p-4">
+              <h4 className="mb-3 font-display text-sm font-semibold text-content">Key points</h4>
+              <ol className="space-y-2.5">
+                {card.keyPoints.map((k, i) => (
+                  <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-content">
+                    <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-surface text-[11px] font-bold text-muted">
+                      {i + 1}
+                    </span>
+                    {k}
+                  </li>
+                ))}
+              </ol>
             </div>
+          )}
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-muted">
+            <span>{cited ? publisherOf(cited.url, cited.title) : 'No source'}</span>
+            <button
+              type="button"
+              className="btn-primary px-3 py-1.5 text-xs"
+              onClick={() => {
+                onOpenChange(false);
+                chat(
+                  { kind: 'cards', deckId: card.deckId, cardIds: [card.id], subject: card.title },
+                  { seed: `Dig into "${card.title}" — what's the full picture?` },
+                );
+              }}
+            >
+              Ask AI
+            </button>
           </div>
         </div>
       </Modal>
     );
   }
 
-  // ---- Company reader: card · evidence · score, side by side ---------------
+  // ---- Company reader: full-width, responsive 2-col -----------------------
   return (
     <Modal open={open} onOpenChange={onOpenChange} title={title} size="2xl">
-      <div className="grid gap-6 lg:grid-cols-[250px_minmax(0,1fr)_300px]">
-        {/* Pane 1 — the card */}
-        <div className="mx-auto w-full max-w-[250px]">
-          <GameCard data={data} />
-          {company && (
-            <button
-              type="button"
-              className="btn-primary mt-4 w-full"
-              onClick={() => {
-                onOpenChange(false);
-                navigate(
-                  `/company/${company.id}/dashboard/overview${marketId ? `?deck=${marketId}` : ''}`,
-                );
-              }}
+      {/* Company header — full width, with logo and actions */}
+      <div className="mb-5 flex items-start gap-4">
+        <div className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-surface-2">
+          <Logo
+            name={company.name}
+            website={company.websiteUrl}
+            logoUrl={company.logoUrl}
+            className="h-full w-full"
+          />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm text-muted">{company.oneLiner}</p>
+          {company.websiteUrl && (
+            <a
+              href={company.websiteUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-flex items-center gap-1 text-xs text-primary-ink hover:underline"
             >
-              <LayoutDashboard className="h-4 w-4" />
-              Open full dashboard
-            </button>
+              <ExternalLink className="h-3 w-3" />
+              {company.websiteUrl.replace(/^https?:\/\//, '')}
+            </a>
           )}
         </div>
+        <button
+          type="button"
+          className="btn-primary shrink-0"
+          onClick={() => {
+            onOpenChange(false);
+            navigate(
+              `/company/${company.id}/dashboard/overview${marketId ? `?deck=${marketId}` : ''}`,
+            );
+          }}
+        >
+          <LayoutDashboard className="h-4 w-4" />
+          Dashboard
+        </button>
+      </div>
 
-        {/* Pane 2 — evidence */}
+      {/* Content: evidence + score side by side on large, stacked on small */}
+      <div className="grid gap-5 md:grid-cols-[1fr_280px]">
+        {/* Evidence */}
         <div className="min-w-0 space-y-4">
-          {company && (
-            <div>
-              <p className="text-sm text-muted">{company.oneLiner}</p>
-              {company.websiteUrl && (
-                <a
-                  href={company.websiteUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-1 inline-flex items-center gap-1 text-xs text-primary-ink hover:underline"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  {company.websiteUrl.replace(/^https?:\/\//, '')}
-                </a>
-              )}
-            </div>
-          )}
-
           {metrics.length > 0 && (
-            <div className="panel-2 p-4">
+            <div className="rounded-xl border border-border p-4">
               <h4 className="mb-3 font-display text-sm font-semibold text-content">Key metrics</h4>
               <ul className="space-y-2.5">
                 {metrics.map((m) => (
@@ -143,7 +139,7 @@ export function CardReader({
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-muted">{METRIC_TYPE_LABELS[m.metricType]}</span>
                       <span className="flex items-center gap-2">
-                        <span className="font-semibold text-content">
+                        <span className="font-semibold tabular-nums text-content">
                           {formatMetricValue(m.metricType, m.value)}
                         </span>
                         <ConfidenceBadge
@@ -153,14 +149,12 @@ export function CardReader({
                           citations={m.citations}
                           metricLabel={METRIC_TYPE_LABELS[m.metricType]}
                         />
-                        {company && (
-                          <DigDeeper
-                            topic={`${METRIC_TYPE_LABELS[m.metricType]} — deep dive`}
-                            companyId={company.id}
-                            companyName={company.name}
-                            context={`Current ${METRIC_TYPE_LABELS[m.metricType]}: ${formatMetricValue(m.metricType, m.value)}`}
-                          />
-                        )}
+                        <DigDeeper
+                          topic={`${METRIC_TYPE_LABELS[m.metricType]} — deep dive`}
+                          companyId={company.id}
+                          companyName={company.name}
+                          context={`Current ${METRIC_TYPE_LABELS[m.metricType]}: ${formatMetricValue(m.metricType, m.value)}`}
+                        />
                       </span>
                     </div>
                     {m.confidence === 'estimated' && m.methodNote && (
@@ -168,7 +162,7 @@ export function CardReader({
                         How we got this: {m.methodNote}
                       </p>
                     )}
-                    {company && m.value != null && m.confidence !== 'unknown' && (
+                    {m.value != null && m.confidence !== 'unknown' && (
                       <div className="mt-1">
                         <FactCheck
                           claim={`${company.name}'s ${METRIC_TYPE_LABELS[m.metricType]} is ${formatMetricValue(m.metricType, m.value)}`}
@@ -192,16 +186,16 @@ export function CardReader({
           )}
         </div>
 
-        {/* Pane 3 — the score, side by side with the evidence it comes from */}
+        {/* Score */}
         <div className="min-w-0">
           {isCompanyScored ? (
             <CmsBreakdown card={card} metrics={metrics} deckUserValues={deckUserValues} />
           ) : (
-            <div className="panel-2 p-4 text-sm text-muted">
+            <div className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-muted">
               {card.cardType === 'vice'
-                ? 'A Vice card is a sourced risk signal — it annotates the company; it isn’t scored.'
+                ? "A Vice card is a sourced risk signal — it annotates the company; it isn't scored."
                 : card.cardType === 'culture'
-                  ? 'A Culture card is a community signal — it annotates the company; it isn’t scored.'
+                  ? "A Culture card is a community signal — it annotates the company; it isn't scored."
                   : 'This card type carries no maturity score.'}
             </div>
           )}

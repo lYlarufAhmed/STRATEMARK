@@ -139,10 +139,10 @@ export const REFRESH_CADENCE_HOURS: Record<RefreshCadence, number> = {
 // ---------------------------------------------------------------------------
 export const DASHBOARD_TABS = [
   'overview',
+  'metrics',
   'live_intel',
   'team_org',
   'live_landing',
-  'metrics',
   'mission_governance',
   'history',
   'products_roadmap',

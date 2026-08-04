@@ -23,7 +23,7 @@ describe('GameCard', () => {
   it('renders the required face fields (spec §7) for a company card', () => {
     const cwc = hydrate(companyCard.id);
     renderWithProviders(<GameCard data={cwc} />);
-    expect(screen.getAllByText('GraceWear Global').length).toBeGreaterThan(0); // name renders in header + lettermark plate
+    expect(screen.getByText('GraceWear Global')).toBeInTheDocument();
     expect(screen.getByText(cwc.company!.oneLiner)).toBeInTheDocument();
     expect(screen.getByText('ARR')).toBeInTheDocument();
     expect(screen.getByText('Team')).toBeInTheDocument();
@@ -42,7 +42,7 @@ describe('GameCard', () => {
 
   it('shows a sourced-risk indicator on a Vice card', () => {
     renderWithProviders(<GameCard data={hydrate(viceCard.id)} />);
-    expect(screen.getByText(/sourced risk signal/i)).toBeInTheDocument();
+    expect(screen.getByText(/risk signal/i)).toBeInTheDocument();
   });
 
   it('renders a non-company Barrier card with its title, no metrics', () => {

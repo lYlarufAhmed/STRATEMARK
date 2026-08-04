@@ -4,10 +4,31 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Market Intelligence Deck Builder</title>
+    <script>
+      /*
+       * Pre-paint theme application. Must run before the bundle loads, otherwise a
+       * dark-mode reload flashes the light canvas for a frame. Deliberately inline,
+       * dependency-free, and duplicated from src/lib/settings/theme.ts — if the
+       * storage key ('mi.theme') or the class name ('dark') changes, change both.
+       */
+      (function () {
+        try {
+          var mode = localStorage.getItem('mi.theme');
+          var followSystem = !mode || mode === 'system';
+          var prefersDark =
+            !!window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (mode === 'dark' || (followSystem && prefersDark)) {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) {
+          /* no storage (private mode) — fall through to the light default */
+        }
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;600;700&family=Parkinsans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
   </head>
