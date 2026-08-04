@@ -12,6 +12,7 @@ import {
   type DeckRefreshEvent,
   type DeckRefreshListener,
   type PreloadRepositoryApi,
+  type ResearchProgress,
   type SecureApi,
 } from '@mi/contracts';
 
@@ -22,9 +23,9 @@ const api: PreloadRepositoryApi = {
   updateMarketCadence: (id, cadence) =>
     ipcRenderer.invoke(IPC_CHANNELS.updateMarketCadence, id, cadence),
   getDeckByMarket: (marketId) => ipcRenderer.invoke(IPC_CHANNELS.getDeckByMarket, marketId),
-  refreshDeck: (marketId) => ipcRenderer.invoke(IPC_CHANNELS.refreshDeck, marketId),
+  refreshDeck: (marketId, handlers) => ipcRenderer.invoke(IPC_CHANNELS.refreshDeck, marketId, handlers?.taskId),
   // Progress handlers can't cross IPC; the renderer polls/receives events instead.
-  createResearchedDeck: (brief) => ipcRenderer.invoke(IPC_CHANNELS.createResearchedDeck, brief),
+  createResearchedDeck: (brief, handlers) => ipcRenderer.invoke(IPC_CHANNELS.createResearchedDeck, brief, handlers?.taskId),
   listCards: (deckId, filter) => ipcRenderer.invoke(IPC_CHANNELS.listCards, deckId, filter),
   getCard: (cardId) => ipcRenderer.invoke(IPC_CHANNELS.getCard, cardId),
   getCompany: (companyId) => ipcRenderer.invoke(IPC_CHANNELS.getCompany, companyId),
@@ -34,14 +35,14 @@ const api: PreloadRepositoryApi = {
     ipcRenderer.invoke(IPC_CHANNELS.getDashboardTab, companyId, tab, force),
   deepDive: (input) => ipcRenderer.invoke(IPC_CHANNELS.deepDive, input),
   factCheck: (input) => ipcRenderer.invoke(IPC_CHANNELS.factCheck, input),
-  generateReport: (request) => ipcRenderer.invoke(IPC_CHANNELS.generateReport, request),
+  generateReport: (request, handlers) => ipcRenderer.invoke(IPC_CHANNELS.generateReport, request, handlers?.taskId),
   listReports: () => ipcRenderer.invoke(IPC_CHANNELS.listReports),
   getReport: (id) => ipcRenderer.invoke(IPC_CHANNELS.getReport, id),
-  expandDeck: (marketId, focus) => ipcRenderer.invoke(IPC_CHANNELS.expandDeck, marketId, focus),
+  expandDeck: (marketId, focus, handlers) => ipcRenderer.invoke(IPC_CHANNELS.expandDeck, marketId, focus, handlers?.taskId),
   overrideMetric: (input) => ipcRenderer.invoke(IPC_CHANNELS.overrideMetric, input),
   getMarketOpportunity: (marketId, force) =>
     ipcRenderer.invoke(IPC_CHANNELS.getMarketOpportunity, marketId, force),
-  askResearch: (input) => ipcRenderer.invoke(IPC_CHANNELS.askResearch, input),
+  askResearch: (input, handlers) => ipcRenderer.invoke(IPC_CHANNELS.askResearch, input, handlers?.taskId),
   listResearchThreads: (filter) => ipcRenderer.invoke(IPC_CHANNELS.listResearchThreads, filter),
   getResearchThread: (id) => ipcRenderer.invoke(IPC_CHANNELS.getResearchThread, id),
   saveThreadAsReport: (threadId, focus) =>
@@ -53,6 +54,13 @@ const api: PreloadRepositoryApi = {
     ipcRenderer.on(IPC_CHANNELS.deckRefreshEvent, handler);
     return () => {
       ipcRenderer.removeListener(IPC_CHANNELS.deckRefreshEvent, handler);
+    };
+  },
+  onResearchProgress: (listener: (progress: ResearchProgress) => void) => {
+    const handler = (_event: unknown, progress: ResearchProgress) => listener(progress);
+    ipcRenderer.on(IPC_CHANNELS.researchProgressEvent, handler);
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.researchProgressEvent, handler);
     };
   },
 };

@@ -222,16 +222,19 @@ export class GeminiRepository implements MarketIntelRepository {
         // Glass-box stream: forward the pipeline's real steps as typed log lines.
         const p = handlers?.onProgress;
         if (!p) return;
-        if (evt.type === 'status') p({ message: evt.message, progress: evt.progress, kind: 'step' });
+        const taskId = handlers?.taskId;
+        if (evt.type === 'status') p({ message: evt.message, progress: evt.progress, kind: 'step', taskId });
         else if (evt.type === 'market')
           p({
             message: `Market defined: ${evt.market.marketName} · angles: ${evt.market.searchThemes.slice(0, 4).join(' / ')}`,
             kind: 'find',
+            taskId,
           });
         else if (evt.type === 'candidates')
           p({
             message: `Discovered ${evt.candidates.length} entities: ${evt.candidates.map((c) => c.name).slice(0, 8).join(', ')}${evt.candidates.length > 8 ? '…' : ''}`,
             kind: 'find',
+            taskId,
           });
         else if (evt.type === 'card') {
           const c = evt.card;
@@ -239,8 +242,9 @@ export class GeminiRepository implements MarketIntelRepository {
           p({
             message: `+ ${c.card.cardType} card: ${label}${c.card.tier ? ` (T${c.card.tier})` : ''} · ${c.metrics.filter((m) => m.value != null).length} metrics`,
             kind: 'find',
+            taskId,
           });
-        } else if (evt.type === 'warning') p({ message: evt.message, kind: 'warn' });
+        } else if (evt.type === 'warning') p({ message: evt.message, kind: 'warn', taskId });
       },
       signal: handlers?.signal,
       targetCompanies: this.targetCompanies,
@@ -250,7 +254,7 @@ export class GeminiRepository implements MarketIntelRepository {
     return { market: result.market, deck: result.deck };
   }
 
-  async refreshDeck(marketId: string): Promise<Deck> {
+  async refreshDeck(marketId: string, handlers?: ResearchHandlers): Promise<Deck> {
     const market = this.snap.markets.find((m) => m.id === marketId);
     const deck = this.snap.decks.find((d) => d.marketId === marketId);
     if (!market || !deck) return Promise.reject(new Error(`Market/deck not found: ${marketId}`));
@@ -260,10 +264,46 @@ export class GeminiRepository implements MarketIntelRepository {
       region: market.scopeDefinition.geography,
     };
     const before = this.snap.cards.filter((c) => c.deckId === deck.id).map((c) => c.id);
-    this.snap.cards = this.snap.cards.filter((c) => c.deckId !== deck.id);
-    const result = await runDeckResearch(brief, this.client, { apiKey: '' });
+
+    const result = await runDeckResearch(brief, this.client, {
+      apiKey: '',
+      onEvent: (evt) => {
+        const p = handlers?.onProgress;
+        if (!p) return;
+        const taskId = handlers?.taskId;
+        if (evt.type === 'status') p({ message: evt.message, progress: evt.progress, kind: 'step', taskId });
+        else if (evt.type === 'market')
+          p({
+            message: `Market defined: ${evt.market.marketName} · angles: ${evt.market.searchThemes.slice(0, 4).join(' / ')}`,
+            kind: 'find',
+            taskId,
+          });
+        else if (evt.type === 'candidates')
+          p({
+            message: `Discovered ${evt.candidates.length} entities: ${evt.candidates.map((c) => c.name).slice(0, 8).join(', ')}${evt.candidates.length > 8 ? '…' : ''}`,
+            kind: 'find',
+            taskId,
+          });
+        else if (evt.type === 'card') {
+          const c = evt.card;
+          const label = c.company?.name ?? c.card.title ?? 'card';
+          p({
+            message: `+ ${c.card.cardType} card: ${label}${c.card.tier ? ` (T${c.card.tier})` : ''} · ${c.metrics.filter((m) => m.value != null).length} metrics`,
+            kind: 'find',
+            taskId,
+          });
+        } else if (evt.type === 'warning') p({ message: evt.message, kind: 'warn', taskId });
+      },
+      signal: handlers?.signal,
+      targetCompanies: this.targetCompanies,
+      concurrency: this.concurrency,
+    });
+
     // Re-point the fresh cards at the existing deck/market.
     for (const cwc of result.cards) cwc.card.deckId = deck.id;
+
+    // Remove old cards ONLY after new research succeeds.
+    this.snap.cards = this.snap.cards.filter((c) => c.deckId !== deck.id);
     this.ingest({ market, deck: { ...deck, lastRefreshedAt: new Date().toISOString() }, cards: result.cards });
     const after = this.snap.cards.filter((c) => c.deckId === deck.id).map((c) => c.id);
     const updated = this.snap.decks.find((d) => d.id === deck.id)!;

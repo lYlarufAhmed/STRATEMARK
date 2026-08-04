@@ -30,46 +30,67 @@ interface Insight {
 /** Build carousel cards out of the real event stream. */
 function deriveInsights(lines: LogLine[]): Insight[] {
   const out: Insight[] = [];
-  const text = (re: RegExp) => lines.find((l) => re.test(l.message))?.message;
 
-  const scope = text(/^Market defined/i);
-  if (scope) {
+  // 1. Scope and Angles from "Market defined: ... · angles: ..."
+  const scopeLine = lines.find((l) => /Market defined:/i.test(l.message))?.message;
+  if (scopeLine) {
+    const parts = scopeLine.replace(/^Market defined:\s*/i, '').split(/·\s*angles:\s*/i);
+    const scopeText = parts[0]?.trim();
+    const anglesText = parts[1]?.trim();
+
+    if (scopeText) {
+      out.push({
+        id: 'scope',
+        eyebrow: 'The market, as defined',
+        body: scopeText,
+        icon: Compass,
+      });
+    }
+
+    if (anglesText) {
+      out.push({
+        id: 'angles',
+        eyebrow: 'Search angles explored',
+        body: anglesText,
+        icon: ListTree,
+      });
+    }
+  }
+
+  // 2. Discovered entity cohort
+  const discoveryLine = lines.find((l) => /Discovered \d+ entities:/i.test(l.message))?.message;
+  if (discoveryLine) {
+    const playersText = discoveryLine.replace(/^Discovered \d+ entities:\s*/i, '').trim();
+    if (playersText) {
+      out.push({
+        id: 'players',
+        eyebrow: 'Entities discovered',
+        body: playersText,
+        icon: Radio,
+      });
+    }
+  }
+
+  // 3. Live Assembled Cards (e.g. "+ company card: OpenAI (T7) · 4 metrics")
+  const cardLines = lines
+    .filter((l) => l.message.startsWith('+ ') || /card:/i.test(l.message))
+    .map((l) => l.message.replace(/^\+\s*/, ''));
+
+  if (cardLines.length > 0) {
     out.push({
-      id: 'scope',
-      eyebrow: 'The market, as defined',
-      body: scope.replace(/^Market defined:\s*/i, ''),
-      icon: Compass,
+      id: 'cards_assembled',
+      eyebrow: `Cards Assembled · ${cardLines.length}`,
+      body: cardLines.slice(-5).join(' · '),
+      icon: Layers,
     });
   }
 
-  const angles = text(/^Angles/i);
-  if (angles) {
-    out.push({
-      id: 'angles',
-      eyebrow: 'How we’re looking',
-      body: angles.replace(/^Angles:\s*/i, ''),
-      icon: ListTree,
-    });
-  }
-
-  // Companies as they surface — the most satisfying beat to watch.
-  const found = lines
-    .filter((l) => l.kind === 'find' && /^(Found|Discovered|Added)/i.test(l.message))
-    .map((l) => l.message.replace(/^(Found|Discovered|Added)[:\s]*/i, ''));
-  if (found.length) {
-    out.push({
-      id: 'players',
-      eyebrow: `Players surfacing · ${found.length}`,
-      body: found.slice(-6).join(' · '),
-      icon: Radio,
-    });
-  }
-
+  // 4. Honest gaps & warnings
   const warns = lines.filter((l) => l.kind === 'warn');
-  if (warns.length) {
+  if (warns.length > 0) {
     out.push({
       id: 'gaps',
-      eyebrow: `Gaps we’re being honest about · ${warns.length}`,
+      eyebrow: `Gaps & Exclusions · ${warns.length}`,
       body: warns.slice(-2).map((w) => w.message).join(' · '),
       icon: ShieldCheck,
     });
@@ -99,12 +120,16 @@ function deriveInsights(lines: LogLine[]): Insight[] {
 
 function LiveLog({ lines }: { lines: LogLine[] }) {
   const ref = useRef<HTMLDivElement>(null);
+  const startAt = lines[0]?.at ?? Date.now();
+
   useEffect(() => {
     ref.current?.scrollTo({ top: ref.current.scrollHeight, behavior: 'smooth' });
   }, [lines.length]);
+
   const color = (k: LogLine['kind']) =>
     k === 'find' ? 'text-emerald-300' : k === 'warn' ? 'text-amber-300' : 'text-sky-300';
   const prefix = (k: LogLine['kind']) => (k === 'find' ? '✓' : k === 'warn' ? '!' : '▸');
+
   return (
     <div
       ref={ref}
@@ -112,21 +137,23 @@ function LiveLog({ lines }: { lines: LogLine[] }) {
       aria-live="polite"
       aria-label="Live research log"
     >
-      {lines.map((l, i) => (
-        <div key={i} className="flex gap-2">
-          <span className={cn('shrink-0', color(l.kind))}>{prefix(l.kind)}</span>
-          {/*
-            Explicit hex, deliberately NOT `text-neutral-*`: this project's
-            tailwind config redefines `neutral` as a single flat sentiment color,
-            so `text-neutral-300` emits no class and the text silently inherits
-            the app's dark ink — dark-on-black, invisible. That was the original
-            "why is this panel so dark" bug.
-          */}
-          <span className={l.kind === 'find' ? 'text-white' : 'text-[#D6DAE3]'}>{l.message}</span>
-        </div>
-      ))}
-      <div className="mt-1 text-[#8A93A6]">
-        <span className="animate-pulse">▮</span>
+      {lines.map((l, i) => {
+        const elapsedSec = Math.max(0, Math.round((l.at - startAt) / 1000));
+        return (
+          /* Single Log Line Row: Displays timestamp prefix, log kind icon (step/find/warn), and message */
+          <div key={i} className="flex items-start gap-2 py-0.5">
+            <span className="shrink-0 text-[#6B7280] text-[11px] select-none">
+              [+{elapsedSec}s]
+            </span>
+            <span className={cn('shrink-0 font-bold', color(l.kind))}>{prefix(l.kind)}</span>
+            <span className={l.kind === 'find' ? 'text-white' : 'text-[#D6DAE3]'}>{l.message}</span>
+          </div>
+        );
+      })}
+      {/* Live Pulsing Cursor Footer: Indicates live incoming event stream */}
+      <div className="mt-1 flex items-center gap-2 text-[#8A93A6]">
+        <span className="animate-pulse text-sky-400">▮</span>
+        <span className="text-[11px] italic">Researching live…</span>
       </div>
     </div>
   );
@@ -159,6 +186,7 @@ function MarketBrief({ insights }: { insights: Insight[] }) {
       onMouseLeave={() => setPaused(false)}
       aria-live="polite"
     >
+      {/* Slide Content Block: Active insight eyebrow, body text, and methodology tag */}
       <div key={active.id} className="mi-brief-in">
         <div className="flex items-center gap-2 text-primary-ink">
           <Icon className="h-4 w-4" />
@@ -176,6 +204,7 @@ function MarketBrief({ insights }: { insights: Insight[] }) {
         </p>
       </div>
 
+      {/* Slide Navigation Dots Footer: Interactive indicator dots for carousel slides */}
       <div className="flex items-center gap-1.5">
         {insights.map((s, n) => (
           <button
@@ -211,12 +240,13 @@ export function ResearchStage({
 
   return (
     <div className="panel mt-6 p-6">
+      {/* Stage Header Controls: Section title and toggle buttons between 'Live log' terminal and 'Market brief' insights carousel */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Sparkles className="h-5 w-5 animate-pulse text-primary-ink" />
           <span className="font-medium text-content">Researching your market…</span>
         </div>
-        {/* Switch between watching the work and reading the brief. */}
+        {/* Switcher Pill Bar: Toggle between watching live terminal logs and reading the synthesized market brief */}
         <div className="flex items-center gap-1 rounded-full border border-border bg-surface-2 p-1">
           {(
             [
@@ -241,6 +271,7 @@ export function ResearchStage({
         </div>
       </div>
 
+      {/* Progress Bar Container: Animated percentage track illustrating overall research pass completion */}
       <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-surface-2">
         <div
           className="h-full rounded-full bg-primary transition-all duration-500"
@@ -249,6 +280,7 @@ export function ResearchStage({
       </div>
       <p className="mt-3 text-sm text-muted">{message}</p>
 
+      {/* Viewport Switcher Container: Dynamically renders either LiveLog or MarketBrief based on active tab */}
       <div className="mt-4">
         {tab === 'log' ? <LiveLog lines={lines} /> : <MarketBrief insights={insights} />}
       </div>

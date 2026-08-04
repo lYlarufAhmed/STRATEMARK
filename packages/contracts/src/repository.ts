@@ -41,11 +41,15 @@ export interface ResearchProgress {
   progress?: number;
   /** Log-line flavor for glass-box terminals: step (phase), find (discovery), warn. */
   kind?: 'step' | 'find' | 'warn';
+  /** Optional task identifier to isolate concurrent streams. */
+  taskId?: string;
 }
 
 export interface ResearchHandlers {
   onProgress?: (progress: ResearchProgress) => void;
   signal?: AbortSignal;
+  /** Optional task identifier for event correlation. */
+  taskId?: string;
 }
 
 /** A grounded source. */
@@ -217,7 +221,7 @@ export interface MarketIntelRepository {
   // Decks
   getDeckByMarket(marketId: string): Promise<Deck | null>;
   /** Re-run the grounded-search research pass for the market scope (spec §9). */
-  refreshDeck(marketId: string): Promise<Deck>;
+  refreshDeck(marketId: string, handlers?: ResearchHandlers): Promise<Deck>;
   /**
    * Research a brand-new deck from a free-text brief (grounded pipeline).
    * Real implementations run Gemini; the demo implementation returns a sample.

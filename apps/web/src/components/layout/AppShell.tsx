@@ -6,6 +6,7 @@ import { ErrorBoundary } from '@/components/states/ErrorBoundary';
 import { FullPageLoader } from '@/components/states/FullPageLoader';
 import { useDeckRefreshSubscription } from '@/hooks/data';
 import { useAutoRefresh } from '@/hooks/useAutoRefresh';
+import { TaskManagerProvider } from '@/lib/tasks/TaskManagerContext';
 
 export function AppShell() {
   // Keep caches fresh when the research pipeline emits refresh events, and run
@@ -13,18 +14,20 @@ export function AppShell() {
   useDeckRefreshSubscription();
   useAutoRefresh();
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-bg">
-      <Sidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar />
-        <main className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
-          <ErrorBoundary>
-            <Suspense fallback={<FullPageLoader />}>
-              <Outlet />
-            </Suspense>
-          </ErrorBoundary>
-        </main>
+    <TaskManagerProvider>
+      <div className="flex h-screen w-screen overflow-hidden bg-bg">
+        <Sidebar />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <TopBar />
+          <main className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
+            <ErrorBoundary>
+              <Suspense fallback={<FullPageLoader />}>
+                <Outlet />
+              </Suspense>
+            </ErrorBoundary>
+          </main>
+        </div>
       </div>
-    </div>
+    </TaskManagerProvider>
   );
 }

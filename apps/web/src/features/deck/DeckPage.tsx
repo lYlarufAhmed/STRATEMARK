@@ -38,6 +38,8 @@ import { useApiKey } from '@/lib/settings/apiKey';
 import { QueryBoundary } from '@/components/states/QueryBoundary';
 import { CardGridSkeleton } from '@/components/states/Skeleton';
 import { EmptyState } from '@/components/states/EmptyState';
+import { ResearchStage } from './ResearchStage';
+import { useTaskManager } from '@/lib/tasks/TaskManagerContext';
 import { CardGrid } from './CardGrid';
 import { TierBadge } from '@/features/card/TierBadge';
 
@@ -57,6 +59,11 @@ export default function DeckPage() {
   const cards = useCards(deckId);
   const refreshDeck = useRefreshDeck();
   const { chat } = useDeepDive();
+  const taskManager = useTaskManager();
+
+  const activeTask = taskManager.tasks.find(
+    (t) => t.marketId === marketId && t.status === 'running',
+  );
 
   // Compare mode: select cards, then ask a grounded question about exactly
   // that set. Selection is deck-page state — leaving the page clears it.
@@ -168,6 +175,16 @@ export default function DeckPage() {
           </Link>
         </div>
       </div>
+
+      {activeTask && (
+        <div className="mb-6">
+          <ResearchStage
+            lines={activeTask.log}
+            message={activeTask.currentStep}
+            pct={activeTask.progress}
+          />
+        </div>
+      )}
 
       <QueryBoundary
         query={cards}

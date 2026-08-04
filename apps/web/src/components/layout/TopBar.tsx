@@ -1,6 +1,7 @@
 import { Monitor, Globe, User } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { isElectron } from '@/lib/repository/ipc-repository';
+import { TaskNotificationButton } from './TaskNotificationPanel';
 
 export function TopBar() {
   const { user } = useAuth();
@@ -11,6 +12,7 @@ export function TopBar() {
         Competitive intelligence, card by card
       </div>
       <div className="flex items-center gap-3">
+        <TaskNotificationButton />
         <span
           className="chip border-border text-muted"
           title={desktop ? 'Running in the Electron desktop shell' : 'Running in the browser'}

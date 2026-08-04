@@ -32,6 +32,7 @@ import {
   type MarketIntelRepository,
   type RefreshCadence,
   type ResearchHandlers,
+  type ResearchProgress,
   type AskResearchInput,
   type ResearchThread,
   type Unsubscribe,
@@ -180,9 +181,29 @@ export class MockRepository implements MarketIntelRepository {
     brief: DeckResearchBrief,
     handlers?: ResearchHandlers,
   ): Promise<{ market: Market; deck: Deck }> {
-    handlers?.onProgress?.({ message: 'Interpreting the market…', progress: 0.15 });
+    const emit = (p: ResearchProgress) => {
+      handlers?.onProgress?.({ ...p, taskId: p.taskId ?? handlers?.taskId });
+    };
+
+    const stepDelay = async (ms: number) => {
+      if (this.latency > 0) {
+        await new Promise((r) => setTimeout(r, Math.min(this.latency, ms)));
+      }
+    };
+
+    emit({ message: 'Understanding the market…', progress: 0.05, kind: 'step' });
+    await stepDelay(100);
+
+    const promptTitle = brief.prompt.slice(0, 70);
+    emit({
+      message: `Market defined: ${promptTitle}${brief.region ? ` (${brief.region})` : ''} · angles: market positioning / growth / competitive dynamics`,
+      progress: 0.1,
+      kind: 'find',
+    });
+    await stepDelay(100);
+
     const market = await this.createMarket({
-      name: brief.prompt.slice(0, 70),
+      name: promptTitle,
       scopeDefinition: {
         vertical: brief.prompt,
         geography: brief.region,
@@ -190,18 +211,64 @@ export class MockRepository implements MarketIntelRepository {
       },
       refreshCadence: 'weekly',
     });
-    handlers?.onProgress?.({ message: 'Researching companies (sample)…', progress: 0.6 });
-    await this.refreshDeck(market.id);
-    handlers?.onProgress?.({ message: 'Assembling deck…', progress: 1 });
+
+    emit({ message: 'Discovering companies via grounded search…', progress: 0.2, kind: 'step' });
+    await stepDelay(120);
+
+    await this.refreshDeck(market.id, handlers);
     const deck = (await this.getDeckByMarket(market.id))!;
+    const deckCards = this.cards.filter((c) => c.deckId === deck.id);
+    const companies = deckCards
+      .map((c) => this.companies.find((cmp) => cmp.id === c.companyId))
+      .filter((cmp): cmp is Company => cmp != null);
+
+    const uniqueCompanyNames = Array.from(new Set(companies.map((c) => c.name)));
+    if (uniqueCompanyNames.length > 0) {
+      emit({
+        message: `Discovered ${uniqueCompanyNames.length} entities: ${uniqueCompanyNames.slice(0, 8).join(', ')}`,
+        progress: 0.3,
+        kind: 'find',
+      });
+      await stepDelay(100);
+
+      let idx = 0;
+      for (const name of uniqueCompanyNames) {
+        idx++;
+        emit({
+          message: `Researched ${name} (${idx}/${uniqueCompanyNames.length})`,
+          progress: 0.3 + (idx / uniqueCompanyNames.length) * 0.4,
+          kind: 'step',
+        });
+        emit({
+          message: `+ company card: ${name} · 4 metrics`,
+          kind: 'find',
+        });
+        await stepDelay(80);
+      }
+    }
+
+    emit({ message: 'Resolving company logos…', progress: 0.75, kind: 'step' });
+    await stepDelay(80);
+    emit({ message: 'Scoring maturity tiers…', progress: 0.85, kind: 'step' });
+    await stepDelay(80);
+    emit({ message: 'Identifying barriers and market insights…', progress: 0.95, kind: 'step' });
+    await stepDelay(80);
+
+    emit({ message: 'Assembling deck…', progress: 1.0, kind: 'step' });
     return { market, deck };
   }
 
-  refreshDeck(marketId: string): Promise<Deck> {
+  async refreshDeck(marketId: string, handlers?: ResearchHandlers): Promise<Deck> {
+    const emit = (p: ResearchProgress) => {
+      handlers?.onProgress?.({ ...p, taskId: p.taskId ?? handlers?.taskId });
+    };
+
     const deck = this.decks.find((d) => d.marketId === marketId);
     if (!deck) return Promise.reject(new Error(`Deck not found for market: ${marketId}`));
     const now = new Date().toISOString();
     const existing = this.cards.filter((c) => c.deckId === deck.id);
+
+    emit({ message: 'Refreshing market research pass…', progress: 0.1, kind: 'step' });
 
     let event: DeckRefreshEvent;
     if (existing.length === 0) {
@@ -227,6 +294,7 @@ export class MockRepository implements MarketIntelRepository {
       };
     }
     deck.lastRefreshedAt = now;
+    emit({ message: 'Updated competitive deck metrics.', progress: 1.0, kind: 'step' });
     this.emit(event);
     return this.delay(deck);
   }

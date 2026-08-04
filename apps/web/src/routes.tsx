@@ -13,6 +13,7 @@ const DashboardPage = lazy(() => import('@/features/dashboard/DashboardPage'));
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage'));
 const ReportsListPage = lazy(() => import('@/features/reports/ReportsListPage'));
 const ReportViewerPage = lazy(() => import('@/features/reports/ReportViewerPage'));
+const ResearchTaskPage = lazy(() => import('@/features/deck/ResearchTaskPage'));
 const NotFoundPage = lazy(() => import('@/features/NotFoundPage'));
 
 /** Shared route tree, used by both the app (HashRouter) and tests (MemoryRouter). */
@@ -29,6 +30,7 @@ export function AppRoutes() {
       >
         <Route index element={<MarketsListPage />} />
         <Route path="markets/new" element={<NewDeckPage />} />
+        <Route path="research/:taskId" element={<ResearchTaskPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="reports" element={<ReportsListPage />} />
         <Route path="reports/:reportId" element={<ReportViewerPage />} />

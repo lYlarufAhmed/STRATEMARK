@@ -9,6 +9,8 @@ import {
 import { useDeckByMarket, useMarket, useRefreshDeck, useUpdateCadence } from '@/hooks/data';
 import { QueryBoundary } from '@/components/states/QueryBoundary';
 import { formatRelative } from '@/lib/format';
+import { ResearchStage } from '@/features/deck/ResearchStage';
+import { useTaskManager } from '@/lib/tasks/TaskManagerContext';
 
 export default function MarketSettingsPage() {
   const { marketId } = useParams();
@@ -16,6 +18,11 @@ export default function MarketSettingsPage() {
   const deck = useDeckByMarket(marketId);
   const updateCadence = useUpdateCadence();
   const refreshDeck = useRefreshDeck();
+  const taskManager = useTaskManager();
+
+  const activeTask = taskManager.tasks.find(
+    (t) => t.marketId === marketId && t.status === 'running',
+  );
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -93,6 +100,16 @@ export default function MarketSettingsPage() {
                 </button>
               </div>
             </div>
+
+            {activeTask && (
+              <div className="mt-5">
+                <ResearchStage
+                  lines={activeTask.log}
+                  message={activeTask.currentStep}
+                  pct={activeTask.progress}
+                />
+              </div>
+            )}
           </div>
         )}
       </QueryBoundary>

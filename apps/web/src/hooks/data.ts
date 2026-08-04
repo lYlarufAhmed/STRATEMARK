@@ -123,11 +123,37 @@ export function useUpdateCadence() {
   });
 }
 
+import { useTaskManager } from '@/lib/tasks/TaskManagerContext';
+
 export function useRefreshDeck() {
   const repo = useRepository();
   const qc = useQueryClient();
+  const taskManager = useTaskManager();
+
   return useMutation({
-    mutationFn: (marketId: string) => repo.refreshDeck(marketId),
+    mutationFn: async (marketId: string) => {
+      const market = await repo.getMarket(marketId);
+      const title = `Refreshing ${market?.name ?? 'market'}`;
+      const taskId = taskManager.startTask('deck_refresh', title, { marketId });
+      try {
+        const deck = await repo.refreshDeck(marketId, {
+          taskId,
+          onProgress: (p) => {
+            taskManager.appendLog(taskId, p.message, p.kind ?? 'step', p.progress);
+          },
+        });
+        taskManager.completeTask(taskId, {
+          marketId,
+          deckId: deck.id,
+          message: `Refresh complete for ${market?.name ?? 'deck'}.`,
+        });
+        return deck;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Refresh failed.';
+        taskManager.failTask(taskId, msg);
+        throw err;
+      }
+    },
     onSuccess: (deck) => {
       qc.invalidateQueries({ queryKey: qk.deck(deck.marketId) });
       qc.invalidateQueries({ queryKey: ['cards', deck.id] });

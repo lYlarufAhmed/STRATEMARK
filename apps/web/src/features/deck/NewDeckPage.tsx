@@ -2,8 +2,8 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Globe2, KeyRound, Sparkles, Wand2 } from 'lucide-react';
 import { useRepository } from '@/lib/repository/RepositoryProvider';
-import { ResearchStage, type LogLine } from './ResearchStage';
 import { useApiKey } from '@/lib/settings/apiKey';
+import { useTaskManager } from '@/lib/tasks/TaskManagerContext';
 
 const EXAMPLES = [
   'Christian apparel companies',
@@ -16,36 +16,45 @@ export default function NewDeckPage() {
   const repo = useRepository();
   const navigate = useNavigate();
   const hasKey = useApiKey((s) => s.hasKey);
+  const taskManager = useTaskManager();
 
   const [prompt, setPrompt] = useState('');
   const [region, setRegion] = useState('');
-  const [running, setRunning] = useState(false);
-  const [progress, setProgress] = useState<{ message: string; pct: number }>({ message: '', pct: 0 });
-  const [log, setLog] = useState<LogLine[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const onSubmit = async (e: FormEvent) => {
+  const onSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!prompt.trim() || running) return;
+    if (!prompt.trim()) return;
     setError(null);
-    setRunning(true);
-    setLog([{ message: `New research brief: "${prompt.trim()}"${region.trim() ? ` · ${region.trim()}` : ''}`, kind: 'step', at: Date.now() }]);
-    setProgress({ message: 'Starting…', pct: 0.02 });
-    try {
-      const { market } = await repo.createResearchedDeck(
+
+    const title = `Research: "${prompt.trim()}"${region.trim() ? ` (${region.trim()})` : ''}`;
+    const taskId = taskManager.startTask('deck_create', title);
+
+    // Immediately navigate to the task's live research view
+    navigate(`/research/${taskId}`);
+
+    // Fire research in background promise
+    void repo
+      .createResearchedDeck(
         { prompt: prompt.trim(), region: region.trim() || null },
         {
+          taskId,
           onProgress: (p) => {
-            setProgress((prev) => ({ message: p.message, pct: p.progress ?? prev.pct }));
-            setLog((prev) => [...prev, { message: p.message, kind: p.kind ?? 'step', at: Date.now() }]);
+            taskManager.appendLog(taskId, p.message, p.kind ?? 'step', p.progress);
           },
         },
-      );
-      navigate(`/markets/${market.id}/deck`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Research failed. Check your API key and try again.');
-      setRunning(false);
-    }
+      )
+      .then(({ market, deck }) => {
+        taskManager.completeTask(taskId, {
+          marketId: market.id,
+          deckId: deck.id,
+          message: `Deck ready: ${market.name}`,
+        });
+      })
+      .catch((err) => {
+        const msg = err instanceof Error ? err.message : 'Research failed. Check your API key and try again.';
+        taskManager.failTask(taskId, msg);
+      });
   };
 
   return (
@@ -75,65 +84,61 @@ export default function NewDeckPage() {
         </div>
       )}
 
-      {running ? (
-        <ResearchStage lines={log} message={progress.message} pct={progress.pct} />
-      ) : (
-        <form onSubmit={onSubmit} className="panel mt-6 space-y-5 p-6">
-          <div>
-            <label className="label" htmlFor="prompt">
-              Market
-            </label>
-            <textarea
-              id="prompt"
-              className="input min-h-24 text-base"
-              placeholder="e.g. Direct-to-consumer Christian apparel brands"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              autoFocus
-            />
-            <div className="mt-2 flex flex-wrap gap-2">
-              {EXAMPLES.map((ex) => (
-                <button
-                  key={ex}
-                  type="button"
-                  onClick={() => setPrompt(ex)}
-                  className="chip border-border text-muted hover:border-primary/50 hover:text-content"
-                >
-                  {ex}
-                </button>
-              ))}
-            </div>
+      <form onSubmit={onSubmit} className="panel mt-6 space-y-5 p-6">
+        <div>
+          <label className="label" htmlFor="prompt">
+            Market
+          </label>
+          <textarea
+            id="prompt"
+            className="input min-h-24 text-base"
+            placeholder="e.g. Direct-to-consumer Christian apparel brands"
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            autoFocus
+          />
+          <div className="mt-2 flex flex-wrap gap-2">
+            {EXAMPLES.map((ex) => (
+              <button
+                key={ex}
+                type="button"
+                onClick={() => setPrompt(ex)}
+                className="chip border-border text-muted hover:border-primary/50 hover:text-content"
+              >
+                {ex}
+              </button>
+            ))}
           </div>
+        </div>
 
-          <div>
-            <label className="label" htmlFor="region">
-              <span className="inline-flex items-center gap-1.5">
-                <Globe2 className="h-4 w-4" /> Region <span className="text-muted">(optional)</span>
-              </span>
-            </label>
-            <input
-              id="region"
-              className="input"
-              placeholder="e.g. California, USA"
-              value={region}
-              onChange={(e) => setRegion(e.target.value)}
-            />
-          </div>
+        <div>
+          <label className="label" htmlFor="region">
+            <span className="inline-flex items-center gap-1.5">
+              <Globe2 className="h-4 w-4" /> Region <span className="text-muted">(optional)</span>
+            </span>
+          </label>
+          <input
+            id="region"
+            className="input"
+            placeholder="e.g. California, USA"
+            value={region}
+            onChange={(e) => setRegion(e.target.value)}
+          />
+        </div>
 
-          {error && (
-            <p className="rounded-lg border border-negative/40 bg-negative/10 px-3 py-2 text-sm text-negative" role="alert">
-              {error}
-            </p>
-          )}
+        {error && (
+          <p className="rounded-lg border border-negative/40 bg-negative/10 px-3 py-2 text-sm text-negative" role="alert">
+            {error}
+          </p>
+        )}
 
-          <div className="flex justify-end">
-            <button type="submit" className="btn-primary" disabled={!prompt.trim()}>
-              <Sparkles className="h-4 w-4" />
-              {hasKey ? 'Research & build deck' : 'Build sample deck'}
-            </button>
-          </div>
-        </form>
-      )}
+        <div className="flex justify-end">
+          <button type="submit" className="btn-primary" disabled={!prompt.trim()}>
+            <Sparkles className="h-4 w-4" />
+            {hasKey ? 'Research & build deck' : 'Build sample deck'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

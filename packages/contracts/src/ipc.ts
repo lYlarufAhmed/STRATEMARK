@@ -7,15 +7,16 @@
  * `window.mi`. Defining the surface here now means the back end has an exact,
  * type-checked target and the renderer never touches Node or IPC details.
  */
-import type { DeckRefreshListener, MarketIntelRepository, Unsubscribe } from './repository';
+import type { DeckRefreshListener, MarketIntelRepository, ResearchProgress, Unsubscribe } from './repository';
 
 /**
  * The API surface exposed on `window.mi` by the Electron preload script.
- * Identical to the repository, except the event subscription is expressed as a
- * plain callback registration (the preload adapts ipcRenderer events to it).
+ * Identical to the repository, except event subscriptions are expressed as plain
+ * callback registrations (the preload adapts ipcRenderer events to them).
  */
 export type PreloadRepositoryApi = Omit<MarketIntelRepository, 'subscribeDeckRefresh'> & {
   onDeckRefresh(listener: DeckRefreshListener): Unsubscribe;
+  onResearchProgress?(listener: (progress: ResearchProgress) => void): Unsubscribe;
 };
 
 /** Canonical IPC channel names (used by both preload and main). */
@@ -50,6 +51,7 @@ export const IPC_CHANNELS = {
   exportBrain: 'mi:exportBrain',
   importBrain: 'mi:importBrain',
   deckRefreshEvent: 'mi:deckRefreshEvent',
+  researchProgressEvent: 'mi:researchProgressEvent',
 } as const;
 
 export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];

@@ -59,14 +59,34 @@ export class IpcRepository implements MarketIntelRepository {
   getDeckByMarket(marketId: string): Promise<Deck | null> {
     return this.api.getDeckByMarket(marketId);
   }
-  refreshDeck(marketId: string): Promise<Deck> {
-    return this.api.refreshDeck(marketId);
+  private bindProgress(handlers?: ResearchHandlers) {
+    if (!handlers?.onProgress || !this.api.onResearchProgress) return undefined;
+    return this.api.onResearchProgress((p) => {
+      if (handlers.taskId && p.taskId && p.taskId !== handlers.taskId) {
+        return;
+      }
+      handlers.onProgress?.(p);
+    });
   }
-  createResearchedDeck(
+
+  async refreshDeck(marketId: string, handlers?: ResearchHandlers): Promise<Deck> {
+    const unsub = this.bindProgress(handlers);
+    try {
+      return await this.api.refreshDeck(marketId, handlers);
+    } finally {
+      unsub?.();
+    }
+  }
+  async createResearchedDeck(
     brief: DeckResearchBrief,
     handlers?: ResearchHandlers,
   ): Promise<{ market: Market; deck: Deck }> {
-    return this.api.createResearchedDeck(brief, handlers);
+    const unsub = this.bindProgress(handlers);
+    try {
+      return await this.api.createResearchedDeck(brief, handlers);
+    } finally {
+      unsub?.();
+    }
   }
   listCards(deckId: string, filter?: CardFilter): Promise<CardWithCompany[]> {
     return this.api.listCards(deckId, filter);
@@ -96,8 +116,17 @@ export class IpcRepository implements MarketIntelRepository {
   factCheck(input: FactCheckInput): Promise<FactCheckResult> {
     return this.api.factCheck(input);
   }
-  expandDeck(marketId: string, focus: ExpandFocus): Promise<{ added: number }> {
-    return this.api.expandDeck(marketId, focus);
+  async expandDeck(
+    marketId: string,
+    focus: ExpandFocus,
+    handlers?: ResearchHandlers,
+  ): Promise<{ added: number }> {
+    const unsub = this.bindProgress(handlers);
+    try {
+      return await this.api.expandDeck(marketId, focus, handlers);
+    } finally {
+      unsub?.();
+    }
   }
   overrideMetric(input: OverrideMetricInput): Promise<CompanyMetric> {
     return this.api.overrideMetric(input);
@@ -105,8 +134,13 @@ export class IpcRepository implements MarketIntelRepository {
   getMarketOpportunity(marketId: string, force?: boolean): Promise<DeepDiveResult> {
     return this.api.getMarketOpportunity(marketId, force);
   }
-  generateReport(request: ReportRequest): Promise<Report> {
-    return this.api.generateReport(request);
+  async generateReport(request: ReportRequest, handlers?: ResearchHandlers): Promise<Report> {
+    const unsub = this.bindProgress(handlers);
+    try {
+      return await this.api.generateReport(request, handlers);
+    } finally {
+      unsub?.();
+    }
   }
   listReports(): Promise<Report[]> {
     return this.api.listReports();
@@ -114,9 +148,14 @@ export class IpcRepository implements MarketIntelRepository {
   getReport(id: string): Promise<Report | null> {
     return this.api.getReport(id);
   }
-  askResearch(input: AskResearchInput, handlers?: ResearchHandlers): Promise<ResearchThread> {
+  async askResearch(input: AskResearchInput, handlers?: ResearchHandlers): Promise<ResearchThread> {
     if (!this.api.askResearch) throw new Error('askResearch not supported on this IPC bridge');
-    return this.api.askResearch(input, handlers);
+    const unsub = this.bindProgress(handlers);
+    try {
+      return await this.api.askResearch(input, handlers);
+    } finally {
+      unsub?.();
+    }
   }
   listResearchThreads(filter?: { deckId?: string; companyId?: string }): Promise<ResearchThread[]> {
     if (!this.api.listResearchThreads) return Promise.resolve([]);

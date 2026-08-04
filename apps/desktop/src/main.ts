@@ -230,11 +230,31 @@ function registerIpc(): void {
   ipcMain.handle(IPC_CHANNELS.getDeckByMarket, (_e, marketId: string) =>
     repository.getDeckByMarket(marketId),
   );
-  ipcMain.handle(IPC_CHANNELS.refreshDeck, (_e, marketId: string) =>
-    repository.refreshDeck(marketId),
+  ipcMain.handle(IPC_CHANNELS.refreshDeck, (e, marketId: string, taskId?: string) =>
+    repository.refreshDeck(marketId, {
+      taskId,
+      onProgress: (progress) => {
+        if (!e.sender.isDestroyed()) {
+          e.sender.send(IPC_CHANNELS.researchProgressEvent, {
+            ...progress,
+            taskId: progress.taskId ?? taskId,
+          });
+        }
+      },
+    }),
   );
-  ipcMain.handle(IPC_CHANNELS.createResearchedDeck, (_e, brief) =>
-    repository.createResearchedDeck(brief),
+  ipcMain.handle(IPC_CHANNELS.createResearchedDeck, (e, brief, taskId?: string) =>
+    repository.createResearchedDeck(brief, {
+      taskId,
+      onProgress: (progress) => {
+        if (!e.sender.isDestroyed()) {
+          e.sender.send(IPC_CHANNELS.researchProgressEvent, {
+            ...progress,
+            taskId: progress.taskId ?? taskId,
+          });
+        }
+      },
+    }),
   );
   ipcMain.handle(IPC_CHANNELS.listCards, (_e, deckId: string, filter) =>
     repository.listCards(deckId, filter),
@@ -254,19 +274,51 @@ function registerIpc(): void {
   );
   ipcMain.handle(IPC_CHANNELS.deepDive, (_e, input) => repository.deepDive(input));
   ipcMain.handle(IPC_CHANNELS.factCheck, (_e, input) => repository.factCheck(input));
-  ipcMain.handle(IPC_CHANNELS.generateReport, (_e, request) =>
-    repository.generateReport(request),
+  ipcMain.handle(IPC_CHANNELS.generateReport, (e, request, taskId?: string) =>
+    repository.generateReport(request, {
+      taskId,
+      onProgress: (progress) => {
+        if (!e.sender.isDestroyed()) {
+          e.sender.send(IPC_CHANNELS.researchProgressEvent, {
+            ...progress,
+            taskId: progress.taskId ?? taskId,
+          });
+        }
+      },
+    }),
   );
   ipcMain.handle(IPC_CHANNELS.listReports, () => repository.listReports());
   ipcMain.handle(IPC_CHANNELS.getReport, (_e, id: string) => repository.getReport(id));
-  ipcMain.handle(IPC_CHANNELS.expandDeck, (_e, marketId: string, focus) =>
-    repository.expandDeck(marketId, focus),
+  ipcMain.handle(IPC_CHANNELS.expandDeck, (e, marketId: string, focus, taskId?: string) =>
+    repository.expandDeck(marketId, focus, {
+      taskId,
+      onProgress: (progress) => {
+        if (!e.sender.isDestroyed()) {
+          e.sender.send(IPC_CHANNELS.researchProgressEvent, {
+            ...progress,
+            taskId: progress.taskId ?? taskId,
+          });
+        }
+      },
+    }),
   );
   ipcMain.handle(IPC_CHANNELS.overrideMetric, (_e, input) => repository.overrideMetric(input));
   ipcMain.handle(IPC_CHANNELS.getMarketOpportunity, (_e, marketId: string, force?: boolean) =>
     repository.getMarketOpportunity(marketId, force),
   );
-  ipcMain.handle(IPC_CHANNELS.askResearch, (_e, input) => repository.askResearch?.(input));
+  ipcMain.handle(IPC_CHANNELS.askResearch, (e, input, taskId?: string) =>
+    repository.askResearch?.(input, {
+      taskId,
+      onProgress: (progress) => {
+        if (!e.sender.isDestroyed()) {
+          e.sender.send(IPC_CHANNELS.researchProgressEvent, {
+            ...progress,
+            taskId: progress.taskId ?? taskId,
+          });
+        }
+      },
+    }),
+  );
   ipcMain.handle(IPC_CHANNELS.listResearchThreads, (_e, filter) =>
     repository.listResearchThreads?.(filter),
   );
