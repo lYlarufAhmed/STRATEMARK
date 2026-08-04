@@ -62,7 +62,7 @@ export class IpcRepository implements MarketIntelRepository {
   private bindProgress(handlers?: ResearchHandlers) {
     if (!handlers?.onProgress || !this.api.onResearchProgress) return undefined;
     return this.api.onResearchProgress((p) => {
-      if (handlers.taskId && p.taskId && p.taskId !== handlers.taskId) {
+      if (handlers.taskId && p.taskId !== handlers.taskId) {
         return;
       }
       handlers.onProgress?.(p);

@@ -679,7 +679,8 @@ export class GeminiRepository implements MarketIntelRepository {
       target: 3,
       signal: handlers?.signal,
       onEvent: (evt) => {
-        if (evt.type === 'status') handlers?.onProgress?.({ message: evt.message, kind: 'step' });
+        if (evt.type === 'status')
+          handlers?.onProgress?.({ message: evt.message, kind: 'step', taskId: handlers?.taskId });
       },
     });
 
