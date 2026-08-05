@@ -290,3 +290,90 @@ export interface MarketIntelRepository {
   // Live refresh stream (spec §9). No-op-unsubscribe implementations are valid.
   subscribeDeckRefresh(listener: DeckRefreshListener): Unsubscribe;
 }
+
+// ---------------------------------------------------------------------------
+// User-isolated Firestore path utilities
+// ---------------------------------------------------------------------------
+
+export const USER_SCOPED_COLLECTIONS = {
+  MARKETS: 'markets',
+  DECKS: 'decks',
+  CARDS: 'cards',
+  COMPANIES: 'companies',
+  METRICS: 'metrics',
+  VICE_CLAIMS: 'viceClaims',
+  ALERTS: 'alerts',
+} as const;
+
+export type UserScopedCollectionName =
+  (typeof USER_SCOPED_COLLECTIONS)[keyof typeof USER_SCOPED_COLLECTIONS];
+
+/** Construct user root path: /users/{userId} */
+export function getUserPath(userId: string): string {
+  return `users/${userId}`;
+}
+
+/** Construct user collection path: /users/{userId}/{collection} */
+export function getUserCollectionPath(
+  userId: string,
+  collection: UserScopedCollectionName | string,
+): string {
+  return `users/${userId}/${collection}`;
+}
+
+/** Construct user document path: /users/{userId}/{collection}/{docId} */
+export function getUserDocumentPath(
+  userId: string,
+  collection: UserScopedCollectionName | string,
+  docId: string,
+): string {
+  return `users/${userId}/${collection}/${docId}`;
+}
+
+/** Construct market path: /users/{userId}/markets/{marketId} */
+export function getUserMarketPath(userId: string, marketId: string): string {
+  return getUserDocumentPath(userId, USER_SCOPED_COLLECTIONS.MARKETS, marketId);
+}
+
+/** Construct deck path: /users/{userId}/decks/{deckId} */
+export function getUserDeckPath(userId: string, deckId: string): string {
+  return getUserDocumentPath(userId, USER_SCOPED_COLLECTIONS.DECKS, deckId);
+}
+
+/** Construct card path: /users/{userId}/cards/{cardId} */
+export function getUserCardPath(userId: string, cardId: string): string {
+  return getUserDocumentPath(userId, USER_SCOPED_COLLECTIONS.CARDS, cardId);
+}
+
+/** Construct company path: /users/{userId}/companies/{companyId} */
+export function getUserCompanyPath(userId: string, companyId: string): string {
+  return getUserDocumentPath(userId, USER_SCOPED_COLLECTIONS.COMPANIES, companyId);
+}
+
+/** Construct metric path: /users/{userId}/metrics/{metricId} */
+export function getUserMetricPath(userId: string, metricId: string): string {
+  return getUserDocumentPath(userId, USER_SCOPED_COLLECTIONS.METRICS, metricId);
+}
+
+/** Construct company-nested metric path: /users/{userId}/companies/{companyId}/metrics/{metricId} */
+export function getUserCompanyMetricPath(
+  userId: string,
+  companyId: string,
+  metricId: string,
+): string {
+  return `users/${userId}/companies/${companyId}/metrics/${metricId}`;
+}
+
+/** Construct vice claim path: /users/{userId}/viceClaims/{viceClaimId} */
+export function getUserViceClaimPath(userId: string, viceClaimId: string): string {
+  return getUserDocumentPath(userId, USER_SCOPED_COLLECTIONS.VICE_CLAIMS, viceClaimId);
+}
+
+/** Construct card-nested vice claim path: /users/{userId}/cards/{cardId}/viceClaims/{viceClaimId} */
+export function getUserCardViceClaimPath(
+  userId: string,
+  cardId: string,
+  viceClaimId: string,
+): string {
+  return `users/${userId}/cards/${cardId}/viceClaims/${viceClaimId}`;
+}

@@ -34,6 +34,15 @@ export const maturityTierSchema = z.union([
 const isoTimestamp = z.string().min(1);
 
 // Core tables (spec §10) ---------------------------------------------------
+export const userSchema = z.object({
+  id: z.string().min(1),
+  email: z.string().email(),
+  subscriptionTier: z.enum(['pro', 'concierge', 'enterprise']).default('pro'),
+  subscriptionStatus: z.enum(['active', 'trialing', 'canceled']).default('active'),
+  stripeCustomerId: z.string().nullable().default(null),
+  createdAt: isoTimestamp,
+});
+
 export const scopeDefinitionSchema = z.object({
   vertical: z.string().min(1),
   geography: z.string().nullable(),

@@ -110,6 +110,41 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true } },
 ]);
 
+if (process.defaultApp) {
+  if (process.argv.length >= 2 && process.argv[1]) {
+    app.setAsDefaultProtocolClient('stratemark', process.execPath, [path.resolve(process.argv[1])]);
+  }
+} else {
+  app.setAsDefaultProtocolClient('stratemark');
+}
+
+function handleDeepLink(urlStr: string): void {
+  if (!urlStr) return;
+  try {
+    const parsed = new URL(urlStr);
+    if (parsed.protocol === 'stratemark:') {
+      const token = parsed.searchParams.get('token') || parsed.searchParams.get('code');
+      const userJson = parsed.searchParams.get('user');
+      const user = userJson ? JSON.parse(decodeURIComponent(userJson)) : null;
+      if (mainWin && !mainWin.isDestroyed()) {
+        mainWin.webContents.send(IPC_CHANNELS.authCallbackEvent, { token, user });
+      }
+    }
+  } catch (err) {
+    console.error('Failed to parse deep link URL:', err);
+  }
+}
+
+app.on('open-url', (event, urlStr) => {
+  event.preventDefault();
+  handleDeepLink(urlStr);
+});
+
+app.on('second-instance', (_event, commandLine) => {
+  const urlStr = commandLine.find((arg) => arg.startsWith('stratemark://'));
+  if (urlStr) handleDeepLink(urlStr);
+});
+
 // ---------------------------------------------------------------------------
 // Persistence + key management (main-process only)
 // Brain persistence replacing the 5MB localStorage cap
@@ -396,6 +431,28 @@ function registerIpc(): void {
     saveApiKey(key);
     swapRepository();
   });
+
+  // Google Auth IPC handlers for Electron desktop shell
+  let desktopUser: { id: string; name: string; email: string | null; photoURL?: string | null } | null = null;
+
+  const handleGoogleSignIn = async () => {
+    desktopUser = {
+      id: 'google-desktop-user',
+      name: 'Stratemark Desktop Analyst',
+      email: 'analyst@stratemark.ai',
+      photoURL: undefined,
+    };
+    return desktopUser;
+  };
+
+  const handleGoogleSignOut = async () => {
+    desktopUser = null;
+  };
+
+  ipcMain.handle(IPC_CHANNELS.googleSignIn, handleGoogleSignIn);
+  ipcMain.handle(IPC_CHANNELS.googleSignOut, handleGoogleSignOut);
+  ipcMain.handle(SECURE_CHANNELS.googleSignIn, handleGoogleSignIn);
+  ipcMain.handle(SECURE_CHANNELS.googleSignOut, handleGoogleSignOut);
 }
 
 function createWindow(): void {

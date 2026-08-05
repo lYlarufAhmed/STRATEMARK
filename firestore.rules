@@ -1,0 +1,66 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if request is authenticated and matches the resource owner
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // User document and all user-isolated data under /users/{userId}/...
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      // Markets: /users/{userId}/markets/{marketId}
+      match /markets/{marketId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Decks: /users/{userId}/decks/{deckId}
+      match /decks/{deckId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Cards: /users/{userId}/cards/{cardId}
+      match /cards/{cardId} {
+        allow read, write: if isOwner(userId);
+
+        // Vice claims nested under cards: /users/{userId}/cards/{cardId}/viceClaims/{viceClaimId}
+        match /viceClaims/{viceClaimId} {
+          allow read, write: if isOwner(userId);
+        }
+      }
+
+      // Companies: /users/{userId}/companies/{companyId}
+      match /companies/{companyId} {
+        allow read, write: if isOwner(userId);
+
+        // Company-nested metrics: /users/{userId}/companies/{companyId}/metrics/{metricId}
+        match /metrics/{metricId} {
+          allow read, write: if isOwner(userId);
+        }
+      }
+
+      // Top-level metrics under user: /users/{userId}/metrics/{metricId}
+      match /metrics/{metricId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Top-level vice claims under user: /users/{userId}/viceClaims/{viceClaimId}
+      match /viceClaims/{viceClaimId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Alerts under user: /users/{userId}/alerts/{alertId}
+      match /alerts/{alertId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Recursive wildcard rule for any other user-scoped collection
+      match /{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+  }
+}

@@ -17,6 +17,9 @@ import type { DeckRefreshListener, MarketIntelRepository, ResearchProgress, Unsu
 export type PreloadRepositoryApi = Omit<MarketIntelRepository, 'subscribeDeckRefresh'> & {
   onDeckRefresh(listener: DeckRefreshListener): Unsubscribe;
   onResearchProgress?(listener: (progress: ResearchProgress) => void): Unsubscribe;
+  googleSignIn?(): Promise<{ id: string; name: string; email: string | null; photoURL?: string | null } | null>;
+  googleSignOut?(): Promise<void>;
+  onAuthCallback?(listener: (data: { token?: string; user?: Record<string, unknown> }) => void): Unsubscribe;
 };
 
 /** Canonical IPC channel names (used by both preload and main). */
@@ -50,6 +53,9 @@ export const IPC_CHANNELS = {
   detachLandingView: 'mi:detachLandingView',
   exportBrain: 'mi:exportBrain',
   importBrain: 'mi:importBrain',
+  googleSignIn: 'mi:googleSignIn',
+  googleSignOut: 'mi:googleSignOut',
+  authCallbackEvent: 'mi:authCallbackEvent',
   deckRefreshEvent: 'mi:deckRefreshEvent',
   researchProgressEvent: 'mi:researchProgressEvent',
 } as const;
@@ -60,12 +66,16 @@ export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];
 export const SECURE_CHANNELS = {
   getApiKey: 'mi:secure:getApiKey',
   setApiKey: 'mi:secure:setApiKey',
+  googleSignIn: 'mi:secure:googleSignIn',
+  googleSignOut: 'mi:secure:googleSignOut',
 } as const;
 
 /** Exposed on `window.miSecure` in the Electron shell; undefined on the web. */
 export interface SecureApi {
   getApiKey(): Promise<string>;
   setApiKey(key: string): Promise<void>;
+  googleSignIn?(): Promise<{ id: string; name: string; email: string | null; photoURL?: string | null } | null>;
+  googleSignOut?(): Promise<void>;
 }
 
 declare global {
