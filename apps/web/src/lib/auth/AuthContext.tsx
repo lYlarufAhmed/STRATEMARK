@@ -163,10 +163,18 @@ export function GoogleAuthProvider({ children }: { children: ReactNode }) {
           await signInWithPopup(authInstance, provider);
         } catch (popupErr: unknown) {
           const errCode = (popupErr as { code?: string })?.code;
-          if (errCode === 'auth/popup-blocked' || errCode === 'auth/popup-closed-by-user') {
-            await signInWithRedirect(authInstance, provider);
+          if (errCode === 'auth/popup-blocked') {
+            try {
+              await signInWithRedirect(authInstance, provider);
+            } catch (redirectErr: unknown) {
+              const redirectMsg = (redirectErr as { message?: string })?.message;
+              throw new Error(redirectMsg || 'Sign-in popup was blocked and redirect failed.');
+            }
+          } else if (errCode === 'auth/popup-closed-by-user' || errCode === 'auth/cancelled-popup-request') {
+            throw new Error('Sign-in popup was closed before completing authentication.');
           } else {
-            throw popupErr;
+            const popupMsg = (popupErr as { message?: string })?.message;
+            throw new Error(popupMsg || 'Google sign-in failed.');
           }
         }
       } else if (isElectron()) {
@@ -182,8 +190,10 @@ export function GoogleAuthProvider({ children }: { children: ReactNode }) {
           } catch (err) {
             console.warn('Failed to save user to localStorage:', err);
           }
+        } else {
+          throw new Error('Google sign-in was canceled or failed in desktop application.');
         }
-      } else {
+      } else if (import.meta.env.MODE === 'test' || import.meta.env.VITEST) {
         const mockGoogleUser: AuthUser = {
           id: 'google-user-' + Date.now(),
           name: 'Google Analyst',
@@ -196,6 +206,8 @@ export function GoogleAuthProvider({ children }: { children: ReactNode }) {
         } catch (err) {
           console.warn('Failed to save user to localStorage:', err);
         }
+      } else {
+        throw new Error('Google Authentication is not configured. Missing Firebase credentials.');
       }
     } catch (err: unknown) {
       console.error('Google Sign In error:', err);

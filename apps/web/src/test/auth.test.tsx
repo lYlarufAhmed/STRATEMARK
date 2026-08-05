@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { GoogleAuthProvider, useAuth } from '@/lib/auth/AuthContext';
@@ -6,57 +6,155 @@ import { TaskManagerProvider } from '@/lib/tasks/TaskManagerContext';
 import { TopBar } from '@/components/layout/TopBar';
 
 function TestAuthComponent() {
-  const { user, isAuthenticated, signInWithGoogle, signOut } = useAuth();
+  const { user, isAuthenticated, signInWithGoogle, signOut, error, clearError } = useAuth();
   return (
     <div>
       <span data-testid="auth-status">{isAuthenticated ? 'Authenticated' : 'Unauthenticated'}</span>
+      <span data-testid="user-id">{user?.id ?? 'no-id'}</span>
       <span data-testid="user-name">{user?.name ?? 'No user'}</span>
+      <span data-testid="user-email">{user?.email ?? 'no-email'}</span>
+      <span data-testid="auth-error">{error ?? 'no-error'}</span>
       <button onClick={() => signInWithGoogle()}>Login</button>
       <button onClick={() => signOut()}>Logout</button>
+      <button onClick={() => clearError()}>ClearError</button>
     </div>
   );
 }
 
 describe('Google Auth System', () => {
-  it('renders topbar user profile dropdown and sign-out flow', async () => {
-    const user = userEvent.setup();
-    render(
-      <GoogleAuthProvider>
-        <TaskManagerProvider>
-          <TopBar />
-        </TaskManagerProvider>
-      </GoogleAuthProvider>,
-    );
-
-    expect(screen.getByText('Local Analyst')).toBeInTheDocument();
-
-    const profileBtn = screen.getByRole('button', { name: /user profile menu/i });
-    await user.click(profileBtn);
-
-    const signOutBtn = screen.getByRole('button', { name: /sign out/i });
-    expect(signOutBtn).toBeInTheDocument();
-
-    await user.click(signOutBtn);
-
-    expect(await screen.findByRole('button', { name: /sign in with google/i })).toBeInTheDocument();
+  beforeEach(() => {
+    localStorage.clear();
+    delete (window as any).mi;
+    delete (window as any).miSecure;
   });
 
-  it('supports sign in with Google', async () => {
-    const user = userEvent.setup();
-    render(
-      <GoogleAuthProvider>
-        <TestAuthComponent />
-      </GoogleAuthProvider>,
-    );
+  describe('Authenticated State', () => {
+    it('renders authenticated state with default local analyst', () => {
+      render(
+        <GoogleAuthProvider>
+          <TestAuthComponent />
+        </GoogleAuthProvider>,
+      );
 
-    const logoutBtn = screen.getByRole('button', { name: 'Logout' });
-    await user.click(logoutBtn);
-    expect(screen.getByTestId('auth-status')).toHaveTextContent('Unauthenticated');
+      expect(screen.getByTestId('auth-status')).toHaveTextContent('Authenticated');
+      expect(screen.getByTestId('user-id')).toHaveTextContent('local');
+      expect(screen.getByTestId('user-name')).toHaveTextContent('Local Analyst');
+    });
 
-    const loginBtn = screen.getByRole('button', { name: 'Login' });
-    await user.click(loginBtn);
+    it('renders user profile menu in TopBar when authenticated', async () => {
+      const user = userEvent.setup();
+      render(
+        <GoogleAuthProvider>
+          <TaskManagerProvider>
+            <TopBar />
+          </TaskManagerProvider>
+        </GoogleAuthProvider>,
+      );
 
-    expect(screen.getByTestId('auth-status')).toHaveTextContent('Authenticated');
-    expect(screen.getByTestId('user-name')).toHaveTextContent('Google Analyst');
+      expect(screen.getByText('Local Analyst')).toBeInTheDocument();
+
+      const profileBtn = screen.getByRole('button', { name: /user profile menu/i });
+      await user.click(profileBtn);
+
+      expect(screen.getByText('No email provided')).toBeInTheDocument();
+      expect(screen.getByText('Google Account')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /sign out/i })).toBeInTheDocument();
+    });
+  });
+
+  describe('Sign-Out & Unauthenticated State', () => {
+    it('executes sign-out flow from TopBar dropdown and transitions to unauthenticated state', async () => {
+      const user = userEvent.setup();
+      render(
+        <GoogleAuthProvider>
+          <TaskManagerProvider>
+            <TopBar />
+          </TaskManagerProvider>
+        </GoogleAuthProvider>,
+      );
+
+      const profileBtn = screen.getByRole('button', { name: /user profile menu/i });
+      await user.click(profileBtn);
+
+      const signOutBtn = screen.getByRole('button', { name: /sign out/i });
+      await user.click(signOutBtn);
+
+      const signInBtn = await screen.findByRole('button', { name: /sign in with google/i });
+      expect(signInBtn).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /user profile menu/i })).not.toBeInTheDocument();
+    });
+
+    it('transitions to unauthenticated state and re-authenticates via signInWithGoogle', async () => {
+      const user = userEvent.setup();
+      render(
+        <GoogleAuthProvider>
+          <TestAuthComponent />
+        </GoogleAuthProvider>,
+      );
+
+      const logoutBtn = screen.getByRole('button', { name: 'Logout' });
+      await user.click(logoutBtn);
+
+      expect(screen.getByTestId('auth-status')).toHaveTextContent('Unauthenticated');
+      expect(screen.getByTestId('user-name')).toHaveTextContent('No user');
+
+      const loginBtn = screen.getByRole('button', { name: 'Login' });
+      await user.click(loginBtn);
+
+      expect(screen.getByTestId('auth-status')).toHaveTextContent('Authenticated');
+      expect(screen.getByTestId('user-name')).toHaveTextContent('Google Analyst');
+      expect(screen.getByTestId('user-email')).toHaveTextContent('analyst@stratemark.ai');
+    });
+  });
+
+  describe('Error State & Error Recovery', () => {
+    it('handles sign-in error and renders Auth Error indicator in TopBar', async () => {
+      (window as any).mi = {
+        googleSignIn: vi.fn().mockRejectedValue(new Error('OAuth provider popup blocked')),
+      };
+
+      const user = userEvent.setup();
+      render(
+        <GoogleAuthProvider>
+          <TaskManagerProvider>
+            <TopBar />
+          </TaskManagerProvider>
+        </GoogleAuthProvider>,
+      );
+
+      // Sign out first to show sign in button
+      const profileBtn = screen.getByRole('button', { name: /user profile menu/i });
+      await user.click(profileBtn);
+      const signOutBtn = screen.getByRole('button', { name: /sign out/i });
+      await user.click(signOutBtn);
+
+      const signInBtn = await screen.findByRole('button', { name: /sign in with google/i });
+      await user.click(signInBtn);
+
+      expect(await screen.findByTitle('OAuth provider popup blocked')).toBeInTheDocument();
+      expect(screen.getByText('Auth Error')).toBeInTheDocument();
+    });
+
+    it('clears auth error when clearError is invoked', async () => {
+      (window as any).mi = {
+        googleSignIn: vi.fn().mockRejectedValue(new Error('Network auth failure')),
+      };
+
+      const user = userEvent.setup();
+      render(
+        <GoogleAuthProvider>
+          <TestAuthComponent />
+        </GoogleAuthProvider>,
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Logout' }));
+      await user.click(screen.getByRole('button', { name: 'Login' }));
+
+      expect(screen.getByTestId('auth-error')).toHaveTextContent('Network auth failure');
+
+      await user.click(screen.getByRole('button', { name: 'ClearError' }));
+
+      expect(screen.getByTestId('auth-error')).toHaveTextContent('no-error');
+    });
   });
 });

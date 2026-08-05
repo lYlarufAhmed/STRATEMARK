@@ -4,19 +4,48 @@ import { config } from './config.js';
 import { scrapeAllSources, scrapeCompany } from './scrapers/index.js';
 import { classifyChanges } from './classify/index.js';
 import { enforceAlertsProvenance } from './provenance.js';
-import { collections, getCompaniesForUser, saveAlert, markAlertDelivered, getUser } from './lib/firestore.js';
+import {
+  collections,
+  getCompaniesForUser,
+  saveAlert,
+  markAlertDelivered,
+  getUser,
+  createUser,
+  getAlertsForUser,
+  setUserMarket,
+  setUserDeck,
+  setUserCard,
+  setUserCompany,
+  setUserMetric,
+  setUserViceClaim,
+  createCompany,
+} from './lib/firestore.js';
 import { sendBatchAlerts } from './lib/email.js';
 import { createCheckoutSession, createPortalSession, getStripe, PLANS, type PlanTier } from './lib/stripe.js';
-import type { User } from './types.js';
+import { authenticateToken, type AuthRequest } from './middleware/auth.js';
+import type { TrackedCompany, User } from './types.js';
 
-const app = express();
+const app: express.Express = express();
 app.use(express.json());
+
+export function parseAuthHeader(req: express.Request): { userId: string | null; error?: string } {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return { userId: null };
+  if (!authHeader.startsWith('Bearer ') && authHeader !== 'Bearer') {
+    return { userId: null, error: 'Invalid authorization header format' };
+  }
+  const token = authHeader.replace(/^Bearer\s*/, '').trim();
+  if (!token) {
+    return { userId: null, error: 'Empty token in authorization header' };
+  }
+  return { userId: token };
+}
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'sentinel', timestamp: new Date().toISOString() });
 });
 
-// ── Auth: simple token-based (email lookup for demo) ────────────────────────
+// ── Auth: simple token-based login (email lookup) ───────────────────────────
 app.post('/api/auth/login', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'email required' });
@@ -32,28 +61,39 @@ app.post('/api/auth/login', async (req, res) => {
       stripeCustomerId: null,
       createdAt: new Date().toISOString(),
     };
-    await collections.users.doc(userId).set(user);
+    await createUser(user);
     return res.json({ user });
   }
   res.json({ user: snap.docs[0].data() });
 });
 
 // ── Stripe Checkout ─────────────────────────────────────────────────────────
-app.post('/api/checkout', async (req, res) => {
-  const { userId, tier } = req.body;
-  if (!userId || !tier) return res.status(400).json({ error: 'userId and tier required' });
+app.post('/api/checkout', authenticateToken, async (req: AuthRequest, res) => {
+  const userId = req.userId!;
+  const { tier } = req.body ?? {};
+  if (!tier) return res.status(400).json({ error: 'tier required' });
   if (!PLANS[tier as PlanTier]) return res.status(400).json({ error: 'invalid tier' });
 
-  const user = await getUser(userId);
-  if (!user) return res.status(404).json({ error: 'user not found' });
+  let user = await getUser(userId);
+  if (!user) {
+    const userEmail = req.user?.email || `${userId}@user.stratemark.ai`;
+    user = {
+      id: userId,
+      email: userEmail,
+      subscriptionTier: 'pro',
+      subscriptionStatus: 'trialing',
+      stripeCustomerId: null,
+      createdAt: new Date().toISOString(),
+    };
+    await createUser(user);
+  }
 
   const url = await createCheckoutSession(tier as PlanTier, user.email, userId);
   res.json({ url });
 });
 
-app.post('/api/portal', async (req, res) => {
-  const { userId } = req.body;
-  if (!userId) return res.status(400).json({ error: 'userId required' });
+app.post('/api/portal', authenticateToken, async (req: AuthRequest, res) => {
+  const userId = req.userId!;
 
   const user = await getUser(userId);
   if (!user?.stripeCustomerId) return res.status(400).json({ error: 'no subscription' });
@@ -63,11 +103,12 @@ app.post('/api/portal', async (req, res) => {
 });
 
 // ── Companies ───────────────────────────────────────────────────────────────
-app.post('/api/companies', async (req, res) => {
-  const { userId, name, edgarCik } = req.body;
-  if (!userId || !name) return res.status(400).json({ error: 'userId and name required' });
+app.post('/api/companies', authenticateToken, async (req: AuthRequest, res) => {
+  const userId = req.userId!;
+  const { name, edgarCik } = req.body ?? {};
+  if (!name) return res.status(400).json({ error: 'name required' });
 
-  const company = {
+  const company: TrackedCompany = {
     id: `company-${Date.now()}`,
     userId,
     name,
@@ -76,40 +117,62 @@ app.post('/api/companies', async (req, res) => {
     rssFeeds: [],
     createdAt: new Date().toISOString(),
   };
-  await collections.companies.doc(company.id).set(company);
+  await createCompany(company);
   res.json({ company });
 });
 
-app.get('/api/companies', async (req, res) => {
-  const { userId } = req.query;
-  if (!userId) return res.status(400).json({ error: 'userId required' });
-  const companies = await getCompaniesForUser(userId as string);
+app.get('/api/companies', authenticateToken, async (req: AuthRequest, res) => {
+  const userId = req.userId!;
+  const companies = await getCompaniesForUser(userId);
   res.json({ companies });
 });
 
 // ── Alerts ──────────────────────────────────────────────────────────────────
-app.get('/api/alerts', async (req, res) => {
-  const { userId } = req.query;
-  if (!userId) return res.status(400).json({ error: 'userId required' });
-  const snap = await collections.alerts
-    .where('userId', '==', userId)
-    .orderBy('createdAt', 'desc')
-    .limit(50)
-    .get();
-  res.json({ alerts: snap.docs.map((d) => d.data()) });
+app.get('/api/alerts', authenticateToken, async (req: AuthRequest, res) => {
+  const userId = req.userId!;
+  const alerts = await getAlertsForUser(userId);
+  res.json({ alerts });
 });
 
 // ── Scrape Trigger ──────────────────────────────────────────────────────────
-app.post('/api/scrape', async (_req, res) => {
+app.post('/api/scrape', authenticateToken, async (req: AuthRequest, res) => {
   try {
+    const userId = req.userId!;
+    let totalAlerts = 0;
+
+    // Process companies for the authenticated user
+    const userCompanies = await getCompaniesForUser(userId);
+    if (userCompanies.length > 0) {
+      const rawChanges = await scrapeAllSources(userCompanies);
+      const classified = await classifyChanges(rawChanges);
+      const alerts = enforceAlertsProvenance(classified, userId);
+
+      const newAlerts = alerts.filter((a) => a.confidence !== 'unknown');
+      for (const alert of newAlerts) {
+        await saveAlert(alert);
+      }
+
+      if (newAlerts.length > 0) {
+        const user = await getUser(userId);
+        if (user?.email) {
+          const sent = await sendBatchAlerts(newAlerts, user.email);
+          for (const alert of newAlerts) {
+            if (sent > 0) await markAlertDelivered(alert.id, userId);
+          }
+          totalAlerts += sent;
+        }
+      }
+    }
+
+    // Process other active subscribers
     const usersSnap = await collections.users
       .where('subscriptionStatus', 'in', ['active', 'trialing'])
       .get();
 
-    let totalAlerts = 0;
-
     for (const userDoc of usersSnap.docs) {
       const user = userDoc.data() as User;
+      if (user.id === userId) continue;
+
       const companies = await getCompaniesForUser(user.id);
       if (companies.length === 0) continue;
 
@@ -118,12 +181,14 @@ app.post('/api/scrape', async (_req, res) => {
       const alerts = enforceAlertsProvenance(classified, user.id);
 
       const newAlerts = alerts.filter((a) => a.confidence !== 'unknown');
-      for (const alert of newAlerts) await saveAlert(alert);
+      for (const alert of newAlerts) {
+        await saveAlert(alert);
+      }
 
       if (newAlerts.length > 0) {
         const sent = await sendBatchAlerts(newAlerts, user.email);
         for (const alert of newAlerts) {
-          if (sent > 0) await markAlertDelivered(alert.id);
+          if (sent > 0) await markAlertDelivered(alert.id, user.id);
         }
         totalAlerts += sent;
       }
@@ -137,8 +202,9 @@ app.post('/api/scrape', async (_req, res) => {
 });
 
 // ── Deck Research & Scrape Pipeline ─────────────────────────────────────────
-app.post('/api/research/deck', async (req, res) => {
-  const { prompt, region = null, userId, targetCompanies } = req.body;
+app.post('/api/research/deck', authenticateToken, async (req: AuthRequest, res) => {
+  const userId = req.userId!;
+  const { prompt, region = null, targetCompanies } = req.body ?? {};
   if (!prompt) return res.status(400).json({ error: 'prompt is required' });
 
   const apiKey = process.env.GEMINI_API_KEY;
@@ -170,7 +236,43 @@ app.post('/api/research/deck', async (req, res) => {
 
     const result = await runDeckResearch({ prompt, region }, client, options);
 
-    // Ensure all companies in result.cards are included
+    // Persist all research data (market, deck, cards, companies, metrics, viceClaims) to user's isolated path (users/{userId}/...)
+    if (result.market) {
+      await setUserMarket(userId, result.market);
+    }
+    if (result.deck) {
+      await setUserDeck(userId, result.deck);
+    }
+    if (result.cards) {
+      const savedCompanies = new Set<string>();
+      for (const cardWithCompany of result.cards) {
+        if (cardWithCompany.card) {
+          await setUserCard(userId, cardWithCompany.card);
+        }
+        if (cardWithCompany.company && cardWithCompany.company.id) {
+          if (!savedCompanies.has(cardWithCompany.company.id)) {
+            savedCompanies.add(cardWithCompany.company.id);
+            await setUserCompany(userId, cardWithCompany.company);
+          }
+        }
+        if (Array.isArray(cardWithCompany.metrics)) {
+          for (const metric of cardWithCompany.metrics) {
+            if (metric) {
+              await setUserMetric(userId, metric);
+            }
+          }
+        }
+        if (Array.isArray(cardWithCompany.viceClaims)) {
+          for (const vc of cardWithCompany.viceClaims) {
+            if (vc) {
+              await setUserViceClaim(userId, vc);
+            }
+          }
+        }
+      }
+    }
+
+    // Ensure all companies in result.cards are included in discoveredCompanies for scraping
     for (const cardWithCompany of result.cards) {
       if (cardWithCompany.company && cardWithCompany.company.id) {
         if (!discoveredCompanies.has(cardWithCompany.company.id)) {
@@ -183,11 +285,11 @@ app.post('/api/research/deck', async (req, res) => {
       }
     }
 
-    // Automatically trigger scrapeCompany() on every company discovered by runDeckResearch()
+    // Trigger scrapeCompany() on every company discovered and save classified alerts to users/{userId}/alerts/...
     const scrapedResults = await Promise.all(
       Array.from(discoveredCompanies.values()).map(async (company) => {
         const changes = await scrapeCompany(company);
-        if (userId && changes.length > 0) {
+        if (changes.length > 0) {
           const classified = await classifyChanges(changes);
           const alerts = enforceAlertsProvenance(classified, userId);
           const newAlerts = alerts.filter((a) => a.confidence !== 'unknown');
@@ -245,7 +347,11 @@ app.post('/api/webhook/stripe', express.raw({ type: 'application/json' }), async
   res.json({ received: true });
 });
 
-const port = parseInt(process.env.PORT ?? '8080', 10);
-app.listen(port, () => {
-  console.log(`Sentinel running on port ${port}`);
-});
+export { app };
+
+if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
+  const port = parseInt(process.env.PORT ?? '8080', 10);
+  app.listen(port, () => {
+    console.log(`Sentinel running on port ${port}`);
+  });
+}
