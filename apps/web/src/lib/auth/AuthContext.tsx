@@ -54,7 +54,7 @@ function getFirebaseConfig() {
   const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
   const appId = import.meta.env.VITE_FIREBASE_APP_ID;
 
-  if (!apiKey) return null;
+  if (!apiKey || apiKey === 'your-firebase-api-key') return null;
   return { apiKey, authDomain, projectId, appId };
 }
 
@@ -215,7 +215,25 @@ export function GoogleAuthProvider({ children }: { children: ReactNode }) {
           console.warn('Failed to save user to localStorage:', err);
         }
       } else {
-        throw new Error('Google Authentication is not configured. Missing Firebase credentials.');
+        if (import.meta.env.DEV) {
+          console.warn('Firebase credentials not configured. Falling back to Mock Analyst in local development.');
+          signedInUser = {
+            id: 'dev-user-' + Date.now(),
+            name: 'Local Analyst (Dev)',
+            email: 'analyst@stratemark.local',
+            photoURL: null,
+          };
+          setUser(signedInUser);
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(signedInUser));
+          } catch (err) {
+            console.warn('Failed to save user to localStorage:', err);
+          }
+          return signedInUser;
+        }
+        throw new Error(
+          'Google Authentication is not configured. Missing Firebase credentials (VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, VITE_FIREBASE_PROJECT_ID, VITE_FIREBASE_APP_ID).',
+        );
       }
       return signedInUser;
     } catch (err: unknown) {

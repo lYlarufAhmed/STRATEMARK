@@ -1,4 +1,6 @@
 import http from 'node:http';
+import fs from 'node:fs';
+import path from 'node:path';
 import { net, shell } from 'electron';
 
 export interface OAuthUser {
@@ -10,11 +12,46 @@ export interface OAuthUser {
 
 let activeOAuthServer: http.Server | null = null;
 
+export function loadDesktopEnv(): void {
+  const envPaths = [
+    path.join(process.cwd(), 'apps/desktop/.env'),
+    path.join(process.cwd(), '.env'),
+  ];
+  for (const envPath of envPaths) {
+    if (fs.existsSync(envPath)) {
+      try {
+        const content = fs.readFileSync(envPath, 'utf8');
+        for (const line of content.split('\n')) {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith('#')) continue;
+          const eqIdx = trimmed.indexOf('=');
+          if (eqIdx > 0) {
+            const key = trimmed.slice(0, eqIdx).trim();
+            const val = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, '');
+            if (!process.env[key]) {
+              process.env[key] = val;
+            }
+          }
+        }
+      } catch {
+        // ignore read errors
+      }
+    }
+  }
+}
+
+function ensureEnvLoaded(): void {
+  if (process.env.NODE_ENV === 'test' || process.env.VITEST) return;
+  loadDesktopEnv();
+}
+
 export function getActiveOAuthServer(): http.Server | null {
   return activeOAuthServer;
 }
 
 export async function performGoogleOAuthFlow(): Promise<OAuthUser> {
+  ensureEnvLoaded();
+
   if (activeOAuthServer) {
     try {
       activeOAuthServer.close();

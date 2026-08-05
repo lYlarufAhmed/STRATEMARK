@@ -31,7 +31,9 @@ import {
 } from '@mi/contracts';
 import { MockRepository } from '@mi/mocks';
 import { GeminiRepository, type RepoSnapshot, type ResearchStore } from '@mi/research';
-import { performGoogleOAuthFlow, type OAuthUser } from './oauth.js';
+import { performGoogleOAuthFlow, loadDesktopEnv, type OAuthUser } from './oauth.js';
+
+loadDesktopEnv();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const WEB_DIST = app.isPackaged
