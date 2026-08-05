@@ -29,6 +29,7 @@ export function AppRoutes() {
         }
       >
         <Route index element={<MarketsListPage />} />
+        <Route path="login" element={<Navigate to="/" replace />} />
         <Route path="markets/new" element={<NewDeckPage />} />
         <Route path="research/:taskId" element={<ResearchTaskPage />} />
         <Route path="settings" element={<SettingsPage />} />
