@@ -4,7 +4,7 @@ set -e
 echo "=== STRATEMARK Sentinel — GCP Setup ==="
 echo ""
 
-PROJECT_ID="${GCP_PROJECT_ID:-xprizegemini}"
+PROJECT_ID="${GCP_PROJECT_ID:-geminixprize-504607}"
 REGION="${GCP_REGION:-us-central1}"
 
 echo "Project: $PROJECT_ID"

@@ -1,6 +1,6 @@
 export const config = {
   gcp: {
-    projectId: process.env.GCP_PROJECT_ID ?? 'snappy-lattice-468011-c9',
+    projectId: process.env.GCP_PROJECT_ID ?? 'geminixprize-504607',
     location: process.env.GCP_LOCATION ?? 'us-central1',
   },
   gemini: {
