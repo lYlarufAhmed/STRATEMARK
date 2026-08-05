@@ -507,8 +507,19 @@ function createWindow(): void {
   wireRefreshForwarding();
 
   const devUrl = process.env.VITE_DEV_SERVER_URL;
-  if (devUrl) void mainWin.loadURL(devUrl);
-  else void mainWin.loadURL('app://bundle/index.html');
+  const bundleUrl = 'app://bundle/index.html';
+
+  if (devUrl) {
+    mainWin.loadURL(devUrl).catch((err) => {
+      console.warn(`[main] Dev server at ${devUrl} unreachable (${(err as Error).message || err}).`);
+      console.info(`[main] Falling back to bundled UI at ${bundleUrl}`);
+      if (mainWin && !mainWin.isDestroyed()) {
+        void mainWin.loadURL(bundleUrl);
+      }
+    });
+  } else {
+    void mainWin.loadURL(bundleUrl);
+  }
 }
 
 process.on('uncaughtException', (err) => {

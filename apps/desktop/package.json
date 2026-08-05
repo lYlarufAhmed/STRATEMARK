@@ -12,7 +12,8 @@
     "test": "vitest",
     "test:run": "vitest run",
     "build": "pnpm --filter @mi/web build && pnpm build:main",
-    "dev": "pnpm build && VITE_DEV_SERVER_URL=http://localhost:5173 electron dist/main.mjs",
+    "dev": "pnpm build && electron dist/main.mjs",
+    "dev:watch": "pnpm build:main && VITE_DEV_SERVER_URL=http://localhost:5173 electron dist/main.mjs",
     "dist": "pnpm build && electron-builder --publish never"
   },
   "build": {
