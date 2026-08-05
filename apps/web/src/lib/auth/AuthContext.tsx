@@ -35,8 +35,8 @@ export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  signIn: () => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
+  signIn: () => Promise<AuthUser | null>;
+  signInWithGoogle: () => Promise<AuthUser | null>;
   signOut: () => Promise<void>;
   clearError: () => void;
 }
@@ -70,20 +70,18 @@ function initFirebaseAuth(): Auth | null {
   }
 }
 
-const LOCAL_USER: AuthUser = { id: 'local', name: 'Local Analyst', email: null };
+export const LOCAL_USER: AuthUser = { id: 'local', name: 'Local Analyst', email: null };
 
 /** Google Auth Provider component supporting live Google OAuth, Electron IPC, and local session fallback */
 export function GoogleAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(() => {
-    if (import.meta.env.MODE === 'test' || import.meta.env.VITEST) {
-      return LOCAL_USER;
-    }
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? (JSON.parse(stored) as AuthUser) : null;
+      if (stored) return JSON.parse(stored) as AuthUser;
     } catch {
-      return null;
+      // ignore JSON parse error
     }
+    return null;
   });
   const [isLoading, setIsLoading] = useState<boolean>(() => {
     if (import.meta.env.MODE === 'test' || import.meta.env.VITEST) {
@@ -152,15 +150,24 @@ export function GoogleAuthProvider({ children }: { children: ReactNode }) {
     return undefined;
   }, [authInstance]);
 
-  const signInWithGoogle = useCallback(async () => {
+  const signInWithGoogle = useCallback(async (): Promise<AuthUser | null> => {
     setError(null);
     setIsLoading(true);
+    let signedInUser: AuthUser | null = null;
     try {
       if (authInstance) {
         const provider = new FirebaseGoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
         try {
-          await signInWithPopup(authInstance, provider);
+          const cred = await signInWithPopup(authInstance, provider);
+          if (cred?.user) {
+            signedInUser = {
+              id: cred.user.uid,
+              name: cred.user.displayName || cred.user.email || 'Google User',
+              email: cred.user.email,
+              photoURL: cred.user.photoURL,
+            };
+          }
         } catch (popupErr: unknown) {
           const errCode = (popupErr as { code?: string })?.code;
           if (errCode === 'auth/popup-blocked') {
@@ -184,9 +191,10 @@ export function GoogleAuthProvider({ children }: { children: ReactNode }) {
             ? await window.mi.googleSignIn()
             : null;
         if (ipcUser) {
-          setUser(ipcUser);
+          signedInUser = ipcUser;
+          setUser(signedInUser);
           try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(ipcUser));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(signedInUser));
           } catch (err) {
             console.warn('Failed to save user to localStorage:', err);
           }
@@ -194,25 +202,27 @@ export function GoogleAuthProvider({ children }: { children: ReactNode }) {
           throw new Error('Google sign-in was canceled or failed in desktop application.');
         }
       } else if (import.meta.env.MODE === 'test' || import.meta.env.VITEST) {
-        const mockGoogleUser: AuthUser = {
+        signedInUser = {
           id: 'google-user-' + Date.now(),
           name: 'Google Analyst',
           email: 'analyst@stratemark.ai',
           photoURL: 'https://lh3.googleusercontent.com/a/default-user',
         };
-        setUser(mockGoogleUser);
+        setUser(signedInUser);
         try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(mockGoogleUser));
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(signedInUser));
         } catch (err) {
           console.warn('Failed to save user to localStorage:', err);
         }
       } else {
         throw new Error('Google Authentication is not configured. Missing Firebase credentials.');
       }
+      return signedInUser;
     } catch (err: unknown) {
       console.error('Google Sign In error:', err);
       const msg = (err as { message?: string })?.message;
       setError(msg || 'Google sign-in failed');
+      return null;
     } finally {
       setIsLoading(false);
     }

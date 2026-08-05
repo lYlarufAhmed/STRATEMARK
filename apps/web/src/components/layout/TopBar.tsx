@@ -149,18 +149,27 @@ export function TopBar() {
             )}
           </div>
         ) : (
-          <button
-            onClick={() => signInWithGoogle()}
-            disabled={isLoading}
-            className="flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-content transition-colors hover:bg-surface-2 disabled:opacity-50"
-          >
-            {isLoading ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin text-muted" />
-            ) : (
-              <GoogleIcon className="h-3.5 w-3.5" />
-            )}
-            <span>Sign in with Google</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => openUpgradeModal('Upgrade to Pro for unlimited AI market research queries.')}
+              className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 px-3 py-1.5 text-xs font-semibold text-slate-950 shadow-sm hover:from-amber-400 hover:to-amber-500 transition-all"
+            >
+              <Sparkles className="h-3.5 w-3.5 shrink-0" />
+              <span>Upgrade to Pro ($49)</span>
+            </button>
+            <button
+              onClick={() => signInWithGoogle()}
+              disabled={isLoading}
+              className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-surface/80 px-2.5 py-1.5 text-xs font-medium text-muted hover:text-content hover:bg-surface-2 transition-colors disabled:opacity-50"
+            >
+              {isLoading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-muted" />
+              ) : (
+                <GoogleIcon className="h-3.5 w-3.5" />
+              )}
+              <span>Already purchased? Sign in</span>
+            </button>
+          </div>
         )}
       </div>
     </header>

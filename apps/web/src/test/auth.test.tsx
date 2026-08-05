@@ -29,6 +29,10 @@ describe('Google Auth System', () => {
   });
 
   describe('Authenticated State', () => {
+    beforeEach(() => {
+      localStorage.setItem('stratemark_auth_user', JSON.stringify({ id: 'local', name: 'Local Analyst', email: null }));
+    });
+
     it('renders authenticated state with default local analyst', () => {
       render(
         <GoogleAuthProvider>
@@ -64,6 +68,7 @@ describe('Google Auth System', () => {
 
   describe('Sign-Out & Unauthenticated State', () => {
     it('executes sign-out flow from TopBar dropdown and transitions to unauthenticated state', async () => {
+      localStorage.setItem('stratemark_auth_user', JSON.stringify({ id: 'local', name: 'Local Analyst', email: null }));
       const user = userEvent.setup();
       render(
         <GoogleAuthProvider>
@@ -79,12 +84,13 @@ describe('Google Auth System', () => {
       const signOutBtn = screen.getByRole('button', { name: /sign out/i });
       await user.click(signOutBtn);
 
-      const signInBtn = await screen.findByRole('button', { name: /sign in with google/i });
+      const signInBtn = await screen.findByRole('button', { name: /already purchased\? sign in/i });
       expect(signInBtn).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /user profile menu/i })).not.toBeInTheDocument();
     });
 
     it('transitions to unauthenticated state and re-authenticates via signInWithGoogle', async () => {
+      localStorage.setItem('stratemark_auth_user', JSON.stringify({ id: 'local', name: 'Local Analyst', email: null }));
       const user = userEvent.setup();
       render(
         <GoogleAuthProvider>
@@ -109,6 +115,7 @@ describe('Google Auth System', () => {
 
   describe('Error State & Error Recovery', () => {
     it('handles sign-in error and renders Auth Error indicator in TopBar', async () => {
+      localStorage.setItem('stratemark_auth_user', JSON.stringify({ id: 'local', name: 'Local Analyst', email: null }));
       (window as any).mi = {
         googleSignIn: vi.fn().mockRejectedValue(new Error('OAuth provider popup blocked')),
       };
@@ -128,7 +135,7 @@ describe('Google Auth System', () => {
       const signOutBtn = screen.getByRole('button', { name: /sign out/i });
       await user.click(signOutBtn);
 
-      const signInBtn = await screen.findByRole('button', { name: /sign in with google/i });
+      const signInBtn = await screen.findByRole('button', { name: /already purchased\? sign in/i });
       await user.click(signInBtn);
 
       expect(await screen.findByTitle('OAuth provider popup blocked')).toBeInTheDocument();
@@ -136,6 +143,7 @@ describe('Google Auth System', () => {
     });
 
     it('clears auth error when clearError is invoked', async () => {
+      localStorage.setItem('stratemark_auth_user', JSON.stringify({ id: 'local', name: 'Local Analyst', email: null }));
       (window as any).mi = {
         googleSignIn: vi.fn().mockRejectedValue(new Error('Network auth failure')),
       };

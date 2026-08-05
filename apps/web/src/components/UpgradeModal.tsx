@@ -1,20 +1,55 @@
+import { useState } from 'react';
 import { useDemo } from '@/lib/demo/DemoContext';
-import { Sparkles, CheckCircle2, ShieldCheck, Zap, X } from 'lucide-react';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { Sparkles, CheckCircle2, ShieldCheck, Zap, X, Loader2 } from 'lucide-react';
 
 export function UpgradeModal() {
   const { isUpgradeModalOpen, closeUpgradeModal, upgradeReason } = useDemo();
+  const { user, isAuthenticated, signInWithGoogle } = useAuth();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   if (!isUpgradeModalOpen) return null;
 
-  const handlePaddleCheckout = () => {
+  const triggerPaddleCheckout = (userEmail?: string | null, userId?: string | null) => {
     const paddleVendorId = import.meta.env.VITE_PADDLE_VENDOR_ID || '12345';
     const paddleProductId = import.meta.env.VITE_PADDLE_PRODUCT_ID || 'pro_tier';
-    const checkoutUrl = `https://checkout.paddle.com/checkout/product/${paddleProductId}?vendor=${paddleVendorId}`;
+    const checkoutUrl = `https://checkout.paddle.com/checkout/product/${paddleProductId}?vendor=${paddleVendorId}&email=${encodeURIComponent(userEmail || '')}&passthrough=${encodeURIComponent(userId || '')}`;
 
     if (window.Paddle?.Checkout) {
-      window.Paddle.Checkout.open({ product: paddleProductId });
+      window.Paddle.Checkout.open({
+        product: paddleProductId,
+        email: userEmail || undefined,
+        passthrough: userId || undefined,
+      });
     } else {
       window.open(checkoutUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const handleUpgradeClick = async () => {
+    setIsProcessing(true);
+    try {
+      let activeUser = user;
+      if (!isAuthenticated || !activeUser) {
+        activeUser = await signInWithGoogle();
+      }
+      triggerPaddleCheckout(activeUser?.email, activeUser?.id);
+    } catch (err) {
+      console.error('Upgrade Google Auth error:', err);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleAlreadyPurchasedSignIn = async () => {
+    setIsProcessing(true);
+    try {
+      await signInWithGoogle();
+      closeUpgradeModal();
+    } catch (err) {
+      console.error('Already purchased sign-in error:', err);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -67,16 +102,31 @@ export function UpgradeModal() {
 
         <div className="flex flex-col gap-3">
           <button
-            onClick={handlePaddleCheckout}
-            className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 transition-all hover:scale-[1.01]"
+            onClick={handleUpgradeClick}
+            disabled={isProcessing}
+            className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 transition-all hover:scale-[1.01] disabled:opacity-60"
           >
-            <ShieldCheck className="w-5 h-5" />
+            {isProcessing ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <ShieldCheck className="w-5 h-5" />
+            )}
             <span>Upgrade with Paddle — $49 One-Time</span>
           </button>
 
+          {!isAuthenticated && (
+            <button
+              onClick={handleAlreadyPurchasedSignIn}
+              disabled={isProcessing}
+              className="w-full py-1.5 text-xs text-center text-amber-400 hover:text-amber-300 transition-colors font-medium"
+            >
+              Already purchased? Sign in
+            </button>
+          )}
+
           <button
             onClick={closeUpgradeModal}
-            className="w-full py-2 text-xs text-center text-slate-400 hover:text-slate-300 transition-colors"
+            className="w-full py-1.5 text-xs text-center text-slate-400 hover:text-slate-300 transition-colors"
           >
             Continue with Demo Mode
           </button>
@@ -90,7 +140,7 @@ declare global {
   interface Window {
     Paddle?: {
       Checkout?: {
-        open: (options: { product: string | number }) => void;
+        open: (options: { product: string | number; email?: string; passthrough?: string }) => void;
       };
     };
   }
