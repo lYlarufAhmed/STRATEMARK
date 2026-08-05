@@ -347,11 +347,51 @@ app.post('/api/webhook/stripe', express.raw({ type: 'application/json' }), async
   res.json({ received: true });
 });
 
+// ── Paddle Webhook ───────────────────────────────────────────────────────────
+app.post('/api/webhook/paddle', express.json(), async (req, res) => {
+  try {
+    const payload = req.body ?? {};
+    const alertName = payload.alert_name || payload.event_type;
+
+    let customData: { userId?: string; tier?: string } = {};
+    if (payload.passthrough) {
+      try {
+        customData =
+          typeof payload.passthrough === 'string'
+            ? JSON.parse(payload.passthrough)
+            : payload.passthrough;
+      } catch {}
+    } else if (payload.data?.custom_data) {
+      customData = payload.data.custom_data;
+    }
+
+    const userId = customData.userId || payload.email || payload.data?.user_id;
+    const tier = customData.tier || 'pro';
+
+    if (userId) {
+      await collections.users.doc(userId).set(
+        {
+          subscriptionTier: tier,
+          subscriptionStatus: 'active',
+          paymentProvider: 'paddle',
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true },
+      );
+    }
+
+    res.json({ received: true, alertName, userId });
+  } catch (err) {
+    console.error('Paddle webhook error:', err);
+    res.status(500).json({ error: 'Paddle webhook processing failed' });
+  }
+});
+
 export { app };
 
 if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
   const port = parseInt(process.env.PORT ?? '8080', 10);
-  app.listen(port, () => {
+  app.listen(port, '0.0.0.0', () => {
     console.log(`Sentinel running on port ${port}`);
   });
 }

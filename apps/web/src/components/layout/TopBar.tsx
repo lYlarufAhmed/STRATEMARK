@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { Monitor, Globe, User, LogOut, ChevronDown, Loader2, AlertCircle } from 'lucide-react';
+import { Monitor, Globe, User, LogOut, ChevronDown, Loader2, AlertCircle, Sparkles } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useDemo } from '@/lib/demo/DemoContext';
 import { isElectron } from '@/lib/repository/ipc-repository';
 import { TaskNotificationButton } from './TaskNotificationPanel';
 
@@ -30,6 +31,7 @@ function GoogleIcon({ className = 'h-4 w-4' }: { className?: string }) {
 export function TopBar() {
   const { user, isAuthenticated, isLoading, error, signInWithGoogle, signOut, clearError } =
     useAuth();
+  const { isDemoMode, remainingDemoQueries, openUpgradeModal } = useDemo();
   const desktop = isElectron();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -48,6 +50,19 @@ export function TopBar() {
     <header className="relative z-30 flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface/40 px-6">
       <div className="text-sm text-muted">Competitive intelligence, card by card</div>
       <div className="flex items-center gap-3">
+        {isDemoMode && (
+          <button
+            onClick={() => openUpgradeModal('Upgrade to Pro for unlimited AI market research queries.')}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500/20 transition-all cursor-pointer"
+            title="Click to upgrade to Stratemark Pro"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            <span>
+              Demo Mode — {remainingDemoQueries} AI {remainingDemoQueries === 1 ? 'query' : 'queries'} remaining
+            </span>
+          </button>
+        )}
+
         <TaskNotificationButton />
         <span
           className="chip border-border text-muted"

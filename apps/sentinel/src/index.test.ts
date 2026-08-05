@@ -309,4 +309,19 @@ describe('Sentinel API Authentication & Persistence', () => {
       expect(savedVice?.claimText).toBe('High concentration risk');
     });
   });
+
+  describe('Paddle Webhook Processing', () => {
+    it('handles paddle webhook payload and updates user subscription tier to pro', async () => {
+      const res = await request(app)
+        .post('/api/webhook/paddle')
+        .send({
+          event_type: 'transaction.completed',
+          passthrough: JSON.stringify({ userId: 'usr_paddle_123', tier: 'pro' }),
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.received).toBe(true);
+      expect(res.body.userId).toBe('usr_paddle_123');
+    });
+  });
 });

@@ -21,10 +21,7 @@ import {
   protocol,
   safeStorage,
   session,
-  shell,
 } from 'electron';
-import http from 'node:http';
-import { randomBytes } from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -45,6 +42,19 @@ const WEB_DIST = app.isPackaged
 app.name = 'Stratemark';
 app.setName('Stratemark');
 process.title = 'Stratemark';
+
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'app',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: true,
+      stream: true,
+    },
+  },
+]);
 
 function createApplicationMenu(): void {
   const isMac = process.platform === 'darwin';
@@ -522,10 +532,22 @@ void app.whenReady().then(() => {
 
   // Serve the web build under app:// (raw file:// blocks ES modules).
   protocol.handle('app', (request) => {
-    const { pathname } = new URL(request.url);
-    const rel = pathname === '/' ? '/index.html' : pathname;
-    const filePath = path.join(WEB_DIST, decodeURIComponent(rel));
-    return net.fetch(pathToFileURL(filePath).toString());
+    try {
+      const urlObj = new URL(request.url);
+      let rel = decodeURIComponent(urlObj.pathname);
+      if (rel === '/' || rel === '/index.html' || rel.startsWith('/bundle')) {
+        rel = '/index.html';
+      }
+      let filePath = path.join(WEB_DIST, rel);
+      if (!existsSync(filePath) || (!path.extname(rel) && rel !== '/index.html')) {
+        filePath = path.join(WEB_DIST, 'index.html');
+      }
+      return net.fetch(pathToFileURL(filePath).toString());
+    } catch (err) {
+      console.error('[main] app protocol handler error:', err);
+      const fallbackPath = path.join(WEB_DIST, 'index.html');
+      return net.fetch(pathToFileURL(fallbackPath).toString());
+    }
   });
 
   try {

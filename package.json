@@ -22,6 +22,8 @@
     "test:e2e": "pnpm --filter @mi/web test:e2e",
     "storybook": "pnpm --filter @mi/web storybook",
     "desktop:dev": "pnpm --filter @mi/desktop dev",
+    "start": "pnpm --filter @mi/sentinel start",
+    "deploy:sentinel": "gcloud run deploy sentinel --source . --region us-central1 --allow-unauthenticated",
     "check": "pnpm typecheck && pnpm lint && pnpm test:unit"
   },
   "devDependencies": {

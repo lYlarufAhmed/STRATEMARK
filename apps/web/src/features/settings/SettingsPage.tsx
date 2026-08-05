@@ -8,17 +8,20 @@ import {
   KeyRound,
   Loader2,
   ShieldCheck,
+  Sparkles,
   Trash2,
   Upload,
 } from 'lucide-react';
 import { createGeminiClient } from '@mi/research';
 import { looksLikeGeminiKey, sanitizeApiKey, useApiKey } from '@/lib/settings/apiKey';
 import { useRepository } from '@/lib/repository/RepositoryProvider';
+import { useDemo } from '@/lib/demo/DemoContext';
 
 type TestState = { status: 'idle' | 'testing' | 'ok' | 'fail'; detail?: string };
 
 export default function SettingsPage() {
   const repo = useRepository();
+  const { openUpgradeModal } = useDemo();
   const { apiKey, model, hasKey, setApiKey, setModel, clear } = useApiKey();
   const [draft, setDraft] = useState(apiKey);
   const [saved, setSaved] = useState(false);
@@ -283,26 +286,28 @@ export default function SettingsPage() {
 
       <div className="panel mt-6 space-y-4 p-6">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="h-5 w-5 text-primary-ink" />
-          <h2 className="font-display text-lg text-content">Stratemark License & Subscription</h2>
+          <Sparkles className="h-5 w-5 text-amber-500" />
+          <h2 className="font-display text-lg text-content">Stratemark Pro Subscription</h2>
         </div>
         <p className="text-sm text-muted">
-          Manage your Stratemark Pro subscription powered by Paddle.
+          Manage your Stratemark Pro subscription and unlock unlimited AI research across Web & Desktop.
         </p>
         <div className="rounded-lg border border-border bg-surface-2 p-4 text-sm">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <span className="font-semibold text-content">License Status:</span>{' '}
-              <span className="text-emerald-700 font-medium">Free / Community Edition</span>
+              <div className="font-semibold text-content">License Status</div>
+              <p className="text-xs text-muted">
+                One-time Paddle license ($49) tied to your Google Account
+              </p>
             </div>
-            <a
-              href="https://stratemark.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-primary text-xs"
+            <button
+              type="button"
+              onClick={() => openUpgradeModal('Upgrade to Stratemark Pro for unlimited AI market research.')}
+              className="btn-primary flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-semibold"
             >
-              Upgrade via Paddle <ExternalLink className="h-3 w-3 ml-1" />
-            </a>
+              <Sparkles className="h-4 w-4" />
+              <span>Upgrade to Pro — $49</span>
+            </button>
           </div>
         </div>
       </div>
