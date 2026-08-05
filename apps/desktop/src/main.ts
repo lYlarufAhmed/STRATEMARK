@@ -17,12 +17,11 @@ import {
   Menu,
   type MenuItemConstructorOptions,
   nativeImage,
-  net,
   protocol,
   safeStorage,
   session,
 } from 'electron';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import {
@@ -528,6 +527,23 @@ process.on('unhandledRejection', (reason) => {
   console.error('[main] UNHANDLED REJECTION:', reason);
 });
 
+const MIME_TYPES: Record<string, string> = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.mjs': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.ico': 'image/x-icon',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
+};
+
 void app.whenReady().then(() => {
   // Strip frame-blocking headers for in-app browser embedding
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
@@ -539,7 +555,7 @@ void app.whenReady().then(() => {
     callback({ cancel: false, responseHeaders });
   });
 
-  // Serve the web build under app:// (raw file:// blocks ES modules).
+  // Serve the web build under app:// with explicit MIME types.
   protocol.handle('app', (request) => {
     try {
       const urlObj = new URL(request.url);
@@ -554,16 +570,34 @@ void app.whenReady().then(() => {
 
       let filePath = path.join(WEB_DIST, rel);
 
-      // SPA fallback: if file doesn't exist and has no extension, serve index.html
+      // SPA fallback: if file doesn't exist or has no extension (and is not index.html), serve index.html
       if (!existsSync(filePath) || (!path.extname(rel) && rel !== '/index.html')) {
         filePath = path.join(WEB_DIST, 'index.html');
       }
 
-      return net.fetch(pathToFileURL(filePath).toString());
+      const ext = path.extname(filePath).toLowerCase();
+      const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+      const fileData = readFileSync(filePath);
+
+      return new Response(fileData, {
+        status: 200,
+        headers: {
+          'Content-Type': contentType,
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
     } catch (err) {
       console.error('[main] app protocol handler error:', err);
-      const fallbackPath = path.join(WEB_DIST, 'index.html');
-      return net.fetch(pathToFileURL(fallbackPath).toString());
+      try {
+        const fallbackPath = path.join(WEB_DIST, 'index.html');
+        const fileData = readFileSync(fallbackPath);
+        return new Response(fileData, {
+          status: 200,
+          headers: { 'Content-Type': 'text/html; charset=utf-8' },
+        });
+      } catch {
+        return new Response('Not Found', { status: 404 });
+      }
     }
   });
 
