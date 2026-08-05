@@ -67,8 +67,6 @@ function createApplicationMenu(): void {
             submenu: [
               { role: 'about', label: 'About Stratemark' },
               { type: 'separator' },
-              { role: 'services' },
-              { type: 'separator' },
               { role: 'hide', label: 'Hide Stratemark' },
               { role: 'hideOthers' },
               { role: 'unhide' },
@@ -110,7 +108,7 @@ function createApplicationMenu(): void {
         { role: 'minimize' },
         { role: 'zoom' },
         ...(isMac
-          ? [{ type: 'separator' }, { role: 'front' }, { type: 'separator' }, { role: 'window' }]
+          ? [{ type: 'separator' }, { role: 'front' }]
           : [{ role: 'close' }]),
       ] as MenuItemConstructorOptions[],
     },
@@ -546,13 +544,21 @@ void app.whenReady().then(() => {
     try {
       const urlObj = new URL(request.url);
       let rel = decodeURIComponent(urlObj.pathname);
-      if (rel === '/' || rel === '/index.html' || rel.startsWith('/bundle')) {
+
+      // Strip leading /bundle if present (e.g. app://bundle/assets/... -> /assets/...)
+      if (rel.startsWith('/bundle/')) {
+        rel = rel.substring('/bundle'.length);
+      } else if (rel === '/bundle' || rel === '/' || rel === '') {
         rel = '/index.html';
       }
+
       let filePath = path.join(WEB_DIST, rel);
+
+      // SPA fallback: if file doesn't exist and has no extension, serve index.html
       if (!existsSync(filePath) || (!path.extname(rel) && rel !== '/index.html')) {
         filePath = path.join(WEB_DIST, 'index.html');
       }
+
       return net.fetch(pathToFileURL(filePath).toString());
     } catch (err) {
       console.error('[main] app protocol handler error:', err);
