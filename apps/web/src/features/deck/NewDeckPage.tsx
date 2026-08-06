@@ -4,6 +4,7 @@ import { Globe2, KeyRound, Sparkles, Wand2 } from 'lucide-react';
 import { useRepository } from '@/lib/repository/RepositoryProvider';
 import { useApiKey } from '@/lib/settings/apiKey';
 import { useTaskManager } from '@/lib/tasks/TaskManagerContext';
+import { useDemo } from '@/lib/demo/DemoContext';
 
 const EXAMPLES = [
   'Christian apparel companies',
@@ -17,6 +18,7 @@ export default function NewDeckPage() {
   const navigate = useNavigate();
   const hasKey = useApiKey((s) => s.hasKey);
   const taskManager = useTaskManager();
+  const demo = useDemo();
 
   const [prompt, setPrompt] = useState('');
   const [region, setRegion] = useState('');
@@ -26,6 +28,10 @@ export default function NewDeckPage() {
     e.preventDefault();
     if (!prompt.trim()) return;
     setError(null);
+
+    if (!demo.consumeDemoQuery()) {
+      return;
+    }
 
     const title = `Research: "${prompt.trim()}"${region.trim() ? ` (${region.trim()})` : ''}`;
     const taskId = taskManager.startTask('deck_create', title);
