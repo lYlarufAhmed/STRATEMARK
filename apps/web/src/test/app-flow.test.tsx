@@ -36,7 +36,11 @@ describe('end-to-end deck flow (markets → deck → 2-level split → card → 
   it('navigates the full journey against the mock repository', { timeout: 20000 }, async () => {
     const { user } = renderApp();
 
-    // Markets list → open the sample market's deck.
+    // Navigate to deck history first (home is now the New Deck page).
+    const historyLink = await screen.findByRole('link', { name: /deck history/i }, FIND);
+    await user.click(historyLink);
+
+    // Deck history → open the sample market's deck.
     const marketBtn = await screen.findByText(
       'Christian Apparel Companies — California',
       undefined,

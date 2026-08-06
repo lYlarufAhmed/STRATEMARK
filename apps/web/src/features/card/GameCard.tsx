@@ -15,7 +15,7 @@ import {
   Layers,
   Lightbulb,
   ShieldAlert,
-  Sparkles,
+  Heart,
   Waypoints,
   type LucideIcon,
 } from 'lucide-react';
@@ -38,7 +38,7 @@ const TYPE_ICON: Record<CardType, LucideIcon> = {
   company: Building2,
   infrastructure: Layers,
   distribution: Waypoints,
-  culture: Sparkles,
+  culture: Heart,
   vice: ShieldAlert,
   insight: Lightbulb,
   barrier: Landmark,

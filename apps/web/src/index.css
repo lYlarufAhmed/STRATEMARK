@@ -147,6 +147,64 @@
   }
 }
 
+/*
+ * Animated border shimmer — works in ALL browsers (no @property / Houdini).
+ *
+ * The trick: instead of animating a CSS custom property (which needs
+ * @property support), we rotate the ENTIRE ::before pseudo-element. It's
+ * oversized (150% of the card) so the conic gradient covers the card even
+ * while spinning. The card's ::after fills the interior, leaving only the
+ * 2px border gap where the gradient shines through.
+ */
+.glow-border {
+  position: relative;
+  overflow: hidden;
+  border: none !important;
+  border-radius: 12px;
+  isolation: isolate;
+}
+.glow-border::before {
+  content: '';
+  position: absolute;
+  /* Oversized so the rotating square always covers the rectangular card */
+  width: 200%;
+  padding-bottom: 200%;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: conic-gradient(
+    transparent 0%,
+    transparent 25%,
+    rgb(var(--c-primary) / 0.8) 30%,
+    rgb(var(--c-primary)) 35%,
+    rgb(var(--c-primary) / 0.8) 40%,
+    transparent 45%,
+    transparent 100%
+  );
+  animation: glow-spin 3s linear infinite;
+  z-index: 0;
+}
+.glow-border::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 10px;
+  background: rgb(var(--c-surface));
+  z-index: 0;
+}
+/* Card content must sit above the pseudo-elements */
+.glow-border > * {
+  position: relative;
+  z-index: 1;
+}
+@keyframes glow-spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .glow-border::before { animation: none; opacity: 0.3; }
+}
+
 /* Estimated figures render visibly softer — striped, not solid (system §4). */
 .mi-est-stripes {
   background-image: repeating-linear-gradient(

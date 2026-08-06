@@ -18,7 +18,7 @@ export default function MarketsListPage() {
             Each deck is a market researched into competitive-intelligence cards.
           </p>
         </div>
-        <Link to="/markets/new" className="btn-primary">
+        <Link to="/" className="btn-primary">
           <PlusCircle className="h-4 w-4" />
           New deck
         </Link>
@@ -33,7 +33,7 @@ export default function MarketsListPage() {
             title="No decks yet"
             description="Describe a market in plain language and we'll research it into a deck of cards."
             action={
-              <Link to="/markets/new" className="btn-primary mt-2">
+              <Link to="/" className="btn-primary mt-2">
                 <PlusCircle className="h-4 w-4" />
                 Create your first deck
               </Link>

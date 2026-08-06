@@ -9,7 +9,7 @@
  *    two "how this works" cards are labelled as method, not findings.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Compass, Layers, ListTree, Radio, ShieldCheck, Sparkles, Terminal } from 'lucide-react';
+import { Compass, Layers, ListTree, Loader2, Radio, ShieldCheck, Terminal } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 export interface LogLine {
@@ -213,7 +213,7 @@ export function ResearchStage({
     <div className="panel mt-6 p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Sparkles className="h-5 w-5 animate-pulse text-primary-ink" />
+          <Loader2 className="h-5 w-5 animate-spin text-muted" />
           <span className="font-medium text-content">Researching your market…</span>
         </div>
         {/* Switch between watching the work and reading the brief. */}

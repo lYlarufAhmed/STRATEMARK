@@ -15,7 +15,7 @@ import { METRIC_COLORS } from '@/lib/theme';
 import { ConfidenceBadge } from '@/features/card/ConfidenceBadge';
 import { DigDeeper } from '@/features/deepdive/DeepDive';
 import { FactCheck } from '@/features/factcheck/FactCheck';
-import { BandGauge, ChartPanel, CompositionDonut, Delta, ShareDonut, TrendArea } from './metricViz';
+import { BandGauge, ChartPanel, CompositionDonut, Delta, ShareDonut, TrendArea, TrendBar } from './metricViz';
 
 /** Readable deep-dive topics per metric. */
 const DEEP_TOPIC: Record<MetricType, string> = {
@@ -331,7 +331,7 @@ export function MetricsTab({ companyId }: { companyId: string }) {
                     sub={`${series.revenue[0]!.period} → ${series.revenue[series.revenue.length - 1]!.period} · estimated series`}
                     right={<Delta data={series.revenue} fmt={(v) => formatMetricValue('arr', v)} />}
                     render={(w) => (
-                      <TrendArea data={series.revenue} color={METRIC_COLORS.arr} width={w} fmt={(v) => formatMetricValue('arr', v)} />
+                      <TrendBar data={series.revenue} color={METRIC_COLORS.arr} width={w} fmt={(v) => formatMetricValue('arr', v)} />
                     )}
                   />
                 )}
@@ -341,7 +341,7 @@ export function MetricsTab({ companyId }: { companyId: string }) {
                     sub={`${series.users[0]!.period} → ${series.users[series.users.length - 1]!.period} · estimated series`}
                     right={<Delta data={series.users} fmt={(v) => formatMetricValue('users', v)} />}
                     render={(w) => (
-                      <TrendArea data={series.users} color={METRIC_COLORS.users} width={w} fmt={(v) => formatMetricValue('users', v)} />
+                      <TrendBar data={series.users} color={METRIC_COLORS.users} width={w} fmt={(v) => formatMetricValue('users', v)} />
                     )}
                   />
                 )}

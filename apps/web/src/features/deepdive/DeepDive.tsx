@@ -20,7 +20,7 @@ import {
   FilePlus2,
   FileText,
   Loader2,
-  Sparkles,
+  MessageCircle,
   X,
 } from 'lucide-react';
 import { publisherOf, type Citation, type DeepDiveInput, type ResearchScope, type ResearchThread } from '@mi/contracts';
@@ -257,11 +257,7 @@ export function DeepDiveProviderWithPanel({ children }: { children: ReactNode })
         {/* Header */}
         <header className="flex items-start justify-between gap-3 border-b border-border px-4 py-3">
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5 text-primary">
-              <Sparkles className="h-3.5 w-3.5" />
-              <span className="text-[11px] font-semibold uppercase tracking-wider">AI Research</span>
-            </div>
-            <h2 className="mt-0.5 truncate text-[14px] font-semibold text-content">
+            <h2 className="truncate text-[14px] font-semibold text-content">
               {thread?.title ?? scopeLabel}
             </h2>
           </div>
@@ -318,11 +314,9 @@ export function DeepDiveProviderWithPanel({ children }: { children: ReactNode })
         {/* Conversation */}
         <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
           {(thread?.messages ?? []).length === 0 && !busy && !error && (
-            <div className="flex flex-col items-center justify-center gap-2 py-16 text-center text-muted">
-              <Sparkles className="h-5 w-5 text-primary" />
-              <p className="max-w-[280px] text-[13px]">
+            <div className="flex flex-col items-center justify-center gap-1 py-16 text-center text-muted">
+              <p className="text-[13px]">
                 Ask anything about <span className="font-medium text-content">{scopeLabel.toLowerCase()}</span>.
-                Every answer is grounded and cited.
               </p>
             </div>
           )}
@@ -348,7 +342,7 @@ export function DeepDiveProviderWithPanel({ children }: { children: ReactNode })
 
           {busy && (
             <div className="flex items-center gap-2 py-6 text-muted">
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <Loader2 className="h-4 w-4 animate-spin text-muted" />
               <span className="text-[13px]">Searching…</span>
             </div>
           )}
@@ -366,7 +360,7 @@ export function DeepDiveProviderWithPanel({ children }: { children: ReactNode })
               <textarea
                 className="input max-h-28 min-h-[38px] flex-1 resize-none py-2 text-[13px]"
                 rows={1}
-                placeholder={placeholder ?? 'Ask anything…'}
+                placeholder={placeholder ?? 'Ask a question…'}
                 aria-label="Ask a research question"
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
@@ -394,7 +388,7 @@ export function DeepDiveProviderWithPanel({ children }: { children: ReactNode })
 }
 
 /**
- * AI affordance icon — replaces the old "Shovel" with a Sparkles icon.
+ * AI affordance icon — replaces the old "Shovel" with a MessageCircle icon.
  * Appears beside data points everywhere, so it stays quiet.
  */
 export function DigDeeper({
@@ -427,7 +421,7 @@ export function DigDeeper({
       aria-label={label}
       title={label}
     >
-      <Sparkles className="h-3 w-3" />
+      <MessageCircle className="h-3 w-3" />
     </button>
   );
 }

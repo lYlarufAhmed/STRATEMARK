@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, NavLink, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, FileText, Sparkles } from 'lucide-react';
+import { ArrowLeft, FileText, Search } from 'lucide-react';
 import { DASHBOARD_TABS, DASHBOARD_TAB_LABELS, type DashboardTab } from '@mi/contracts';
 import { useCompany, useReports, useRerunDashboardTab } from '@/hooks/data';
 import { useRepository } from '@/lib/repository/RepositoryProvider';
@@ -44,7 +44,7 @@ function ResearchComposer({ companyId, companyName }: { companyId: string; compa
   return (
     <form onSubmit={submit} className="flex min-w-0 flex-1 items-center gap-2">
       <div className="relative min-w-0 flex-1">
-        <Sparkles className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-faint" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-faint" />
         <input
           className="input py-2 pl-8 text-[13px]"
           value={q}

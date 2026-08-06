@@ -27,8 +27,8 @@ export function AppRoutes() {
           </RequireAuth>
         }
       >
-        <Route index element={<MarketsListPage />} />
-        <Route path="markets/new" element={<NewDeckPage />} />
+        <Route index element={<NewDeckPage />} />
+        <Route path="history" element={<MarketsListPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="reports" element={<ReportsListPage />} />
         <Route path="reports/:reportId" element={<ReportViewerPage />} />

@@ -1,11 +1,11 @@
 import { NavLink } from 'react-router-dom';
-import { FileText, Layers, LayoutGrid, PlusCircle, Settings } from 'lucide-react';
+import { Clock, FileText, Layers, PlusCircle, Settings } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useApiKey } from '@/lib/settings/apiKey';
 
 const NAV = [
-  { to: '/', label: 'Decks', icon: LayoutGrid, end: true },
-  { to: '/markets/new', label: 'New Deck', icon: PlusCircle, end: false },
+  { to: '/', label: 'New Deck', icon: PlusCircle, end: true },
+  { to: '/history', label: 'Deck History', icon: Clock, end: false },
   { to: '/reports', label: 'Reports', icon: FileText, end: false },
   { to: '/settings', label: 'Settings', icon: Settings, end: false },
 ];

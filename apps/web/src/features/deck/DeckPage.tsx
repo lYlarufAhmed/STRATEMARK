@@ -80,7 +80,7 @@ export default function DeckPage() {
     if (!deckId || selected.size === 0) return;
     chat(
       { kind: 'cards', deckId, cardIds: [...selected] },
-      { placeholder: 'Compare these — who is really leading, and why?' },
+      { placeholder: 'Compare these…' },
     );
     exitCompare();
   };
@@ -109,9 +109,9 @@ export default function DeckPage() {
       {/* Header */}
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Link to="/" className="mb-1 inline-flex items-center gap-1.5 text-sm text-muted hover:text-content">
+          <Link to="/history" className="mb-1 inline-flex items-center gap-1.5 text-sm text-muted hover:text-content">
             <ArrowLeft className="h-4 w-4" />
-            Markets
+            Deck History
           </Link>
           <h1 className="font-display text-2xl font-semibold text-content">
             {market.data?.name ?? 'Deck'}
@@ -129,7 +129,7 @@ export default function DeckPage() {
               deckId &&
               chat(
                 { kind: 'deck', deckId },
-                { placeholder: 'Ask about this market — who leads, what changed, where the gap is…' },
+                { placeholder: 'Ask about this market…' },
               )
             }
           >
