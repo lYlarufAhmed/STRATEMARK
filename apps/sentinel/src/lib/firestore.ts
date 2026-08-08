@@ -225,6 +225,8 @@ export async function markAlertDelivered(alertId: string, userId?: string): Prom
   await collections.alerts.doc(alertId).update({ deliveredAt: new Date().toISOString() });
 }
 
+const FIRESTORE_BATCH_LIMIT = 400;
+
 /** Import user brain snapshot into user-scoped Firestore collections in chunks of 500 */
 export async function importUserBrainSnapshot(
   userId: string,
@@ -261,12 +263,12 @@ export async function importUserBrainSnapshot(
         for (const doc of snap.docs) {
           batch.delete(doc.ref);
           count++;
-          if (count % 400 === 0) {
+          if (count % FIRESTORE_BATCH_LIMIT === 0) {
             await batch.commit();
             batch = db.batch();
           }
         }
-        if (count % 400 !== 0) {
+        if (count % FIRESTORE_BATCH_LIMIT !== 0) {
           await batch.commit();
         }
       }
@@ -285,14 +287,14 @@ export async function importUserBrainSnapshot(
       count++;
       totalImported++;
 
-      if (count % 400 === 0) {
+      if (count % FIRESTORE_BATCH_LIMIT === 0) {
         await batch.commit();
         batch = db.batch();
       }
     }
   }
 
-  if (count % 400 !== 0) {
+  if (count % FIRESTORE_BATCH_LIMIT !== 0) {
     await batch.commit();
   }
 

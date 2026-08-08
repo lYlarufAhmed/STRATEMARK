@@ -161,38 +161,21 @@ export function ImportBrainModal({ open, onOpenChange, onSuccess }: ImportBrainM
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-              <div className="rounded-lg bg-surface p-2 text-center">
-                <div className="font-semibold text-content">{parsedResult.snapshot.markets.length}</div>
-                <div className="text-muted">Markets</div>
-              </div>
-              <div className="rounded-lg bg-surface p-2 text-center">
-                <div className="font-semibold text-content">{parsedResult.snapshot.decks.length}</div>
-                <div className="text-muted">Decks</div>
-              </div>
-              <div className="rounded-lg bg-surface p-2 text-center">
-                <div className="font-semibold text-content">{parsedResult.snapshot.companies.length}</div>
-                <div className="text-muted">Companies</div>
-              </div>
-              <div className="rounded-lg bg-surface p-2 text-center">
-                <div className="font-semibold text-content">{parsedResult.snapshot.cards.length}</div>
-                <div className="text-muted">Cards</div>
-              </div>
-              <div className="rounded-lg bg-surface p-2 text-center">
-                <div className="font-semibold text-content">{parsedResult.snapshot.metrics.length}</div>
-                <div className="text-muted">Metrics</div>
-              </div>
-              <div className="rounded-lg bg-surface p-2 text-center">
-                <div className="font-semibold text-content">{parsedResult.snapshot.viceClaims.length}</div>
-                <div className="text-muted">Vice Claims</div>
-              </div>
-              <div className="rounded-lg bg-surface p-2 text-center">
-                <div className="font-semibold text-content">{parsedResult.snapshot.reports.length}</div>
-                <div className="text-muted">Reports</div>
-              </div>
-              <div className="rounded-lg bg-surface p-2 text-center">
-                <div className="font-semibold text-content">{parsedResult.snapshot.threads.length}</div>
-                <div className="text-muted">Threads</div>
-              </div>
+              {[
+                { label: 'Markets', count: parsedResult.snapshot.markets.length },
+                { label: 'Decks', count: parsedResult.snapshot.decks.length },
+                { label: 'Companies', count: parsedResult.snapshot.companies.length },
+                { label: 'Cards', count: parsedResult.snapshot.cards.length },
+                { label: 'Metrics', count: parsedResult.snapshot.metrics.length },
+                { label: 'Vice Claims', count: parsedResult.snapshot.viceClaims.length },
+                { label: 'Reports', count: parsedResult.snapshot.reports.length },
+                { label: 'Threads', count: parsedResult.snapshot.threads.length },
+              ].map((stat) => (
+                <div key={stat.label} className="rounded-lg bg-surface p-2 text-center">
+                  <div className="font-semibold text-content">{stat.count}</div>
+                  <div className="text-muted">{stat.label}</div>
+                </div>
+              ))}
             </div>
 
             {/* Warnings */}
