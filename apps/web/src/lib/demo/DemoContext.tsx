@@ -22,7 +22,7 @@ export interface DemoState {
 
 const DemoContext = createContext<DemoState | null>(null);
 
-const STORAGE_KEY_DEMO_QUERIES = 'stratemark_demo_queries_remaining';
+export const STORAGE_KEY_DEMO_QUERIES = 'stratemark_demo_queries_remaining';
 const INITIAL_DEMO_QUERIES = 3;
 
 export function DemoProvider({ children }: { children: ReactNode }) {

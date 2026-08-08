@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { DemoProvider, useDemo } from '@/lib/demo/DemoContext';
+import { DemoProvider, STORAGE_KEY_DEMO_QUERIES, useDemo } from '@/lib/demo/DemoContext';
 import { GoogleAuthProvider } from '@/lib/auth/AuthContext';
 import { RepositoryProvider } from '@/lib/repository/RepositoryProvider';
 import { TaskManagerProvider } from '@/lib/tasks/TaskManagerContext';
@@ -150,29 +150,28 @@ describe('NewDeckPage Deck Creation in Demo Mode', () => {
     };
   }
 
+  async function submitDeckPrompt(user: ReturnType<typeof userEvent.setup>, promptText: string) {
+    const textarea = screen.getByPlaceholderText(/Direct-to-consumer Christian apparel brands/i);
+    await user.type(textarea, promptText);
+    const submitBtn = screen.getByRole('button', { name: /Build sample deck|Research & build deck/i });
+    await user.click(submitBtn);
+  }
+
   it('allows deck creation and navigates to research when queries remain', async () => {
     const { user } = renderNewDeckApp();
 
-    const textarea = screen.getByPlaceholderText(/Direct-to-consumer Christian apparel brands/i);
-    await user.type(textarea, 'AI code-review startups');
-
-    const submitBtn = screen.getByRole('button', { name: /Build sample deck|Research & build deck/i });
-    await user.click(submitBtn);
+    await submitDeckPrompt(user, 'AI code-review startups');
 
     expect(await screen.findByText('Live Research Task View')).toBeInTheDocument();
   });
 
   it('allows deck creation on last query and opens UpgradeModal warning', async () => {
     // Consume 2 queries beforehand
-    localStorage.setItem('stratemark_demo_queries_remaining', '1');
+    localStorage.setItem(STORAGE_KEY_DEMO_QUERIES, '1');
 
     const { user } = renderNewDeckApp();
 
-    const textarea = screen.getByPlaceholderText(/Direct-to-consumer Christian apparel brands/i);
-    await user.type(textarea, 'Precision fermentation companies');
-
-    const submitBtn = screen.getByRole('button', { name: /Build sample deck|Research & build deck/i });
-    await user.click(submitBtn);
+    await submitDeckPrompt(user, 'Precision fermentation companies');
 
     // Navigates to live research
     expect(await screen.findByText('Live Research Task View')).toBeInTheDocument();
@@ -186,15 +185,11 @@ describe('NewDeckPage Deck Creation in Demo Mode', () => {
 
   it('blocks deck creation and triggers UpgradeModal when queries are exhausted', async () => {
     // Queries exhausted
-    localStorage.setItem('stratemark_demo_queries_remaining', '0');
+    localStorage.setItem(STORAGE_KEY_DEMO_QUERIES, '0');
 
     const { user } = renderNewDeckApp();
 
-    const textarea = screen.getByPlaceholderText(/Direct-to-consumer Christian apparel brands/i);
-    await user.type(textarea, 'Non-alcoholic spirits brands');
-
-    const submitBtn = screen.getByRole('button', { name: /Build sample deck|Research & build deck/i });
-    await user.click(submitBtn);
+    await submitDeckPrompt(user, 'Non-alcoholic spirits brands');
 
     // Does NOT navigate to live research view
     expect(screen.queryByText('Live Research Task View')).not.toBeInTheDocument();
