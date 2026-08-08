@@ -30,7 +30,7 @@ describe('CardReader', () => {
     expect(within(dialog).getByText('Company Maturity Score')).toBeInTheDocument();
     // Holy Hype has a +1 nudge with a reason — it must be surfaced.
     expect(within(dialog).getByText(/compounding/i)).toBeInTheDocument();
-    expect(within(dialog).getByRole('button', { name: /dashboard/i })).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: /view more/i })).toBeInTheDocument();
   });
 
   it('shows sourced vice claims with citations', () => {

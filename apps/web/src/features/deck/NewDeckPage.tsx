@@ -231,8 +231,8 @@ export default function NewDeckPage() {
           /* ── Empty state ── */
           <div className="w-full max-w-2xl pb-32">
             <div className="mb-8">
-              <div className="flex items-center gap-2">
-                <img src={wordmark} alt="Stratemark" className="h-5" />
+              <div className="flex items-center gap-3">
+                <img src={wordmark} alt="Stratemark" className="h-10" />
                 <span className="text-[13px] text-muted">{timeLabel()}</span>
               </div>
               <h1 className="mt-1.5 font-display text-2xl font-semibold text-content md:text-3xl">
@@ -297,7 +297,7 @@ export default function NewDeckPage() {
                   </p>
                   <div className="mt-3 flex items-center gap-3">
                     <Link to={session.done.link}
-                      className="inline-flex items-center gap-2 rounded-full bg-content px-5 py-2.5 text-[13px] font-medium text-bg transition-opacity hover:opacity-90"
+                      className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-[13px] font-medium text-primary-fg transition-opacity hover:opacity-90"
                     >
                       View your deck <ArrowRight className="h-3.5 w-3.5" />
                     </Link>

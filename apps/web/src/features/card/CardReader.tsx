@@ -87,9 +87,9 @@ export function CardReader({
   // ---- Company reader: full-width, responsive 2-col -----------------------
   return (
     <Modal open={open} onOpenChange={onOpenChange} title={title} size="2xl">
-      {/* Company header — full width, with logo and actions */}
-      <div className="mb-5 flex items-start gap-4">
-        <div className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-surface-2">
+      {/* ── Company header — premium layout ── */}
+      <div className="mb-6 flex items-start gap-4 border-b border-border pb-5">
+        <div className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-[12px] border border-border bg-surface-2 p-1">
           <Logo
             name={company.name}
             website={company.websiteUrl}
@@ -98,13 +98,13 @@ export function CardReader({
           />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm text-muted">{company.oneLiner}</p>
+          <p className="text-[13px] leading-relaxed text-muted">{company.oneLiner}</p>
           {company.websiteUrl && (
             <a
               href={company.websiteUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-1 inline-flex items-center gap-1 text-xs text-primary-ink hover:underline"
+              className="mt-1.5 inline-flex items-center gap-1 text-[12px] text-primary-ink hover:underline"
             >
               <ExternalLink className="h-3 w-3" />
               {company.websiteUrl.replace(/^https?:\/\//, '')}
@@ -113,7 +113,7 @@ export function CardReader({
         </div>
         <button
           type="button"
-          className="btn-primary shrink-0"
+          className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-[13px] font-medium text-primary-fg transition-opacity hover:opacity-90"
           onClick={() => {
             onOpenChange(false);
             navigate(
@@ -122,7 +122,7 @@ export function CardReader({
           }}
         >
           <LayoutDashboard className="h-4 w-4" />
-          Dashboard
+          View more
         </button>
       </div>
 
@@ -131,13 +131,13 @@ export function CardReader({
         {/* Evidence */}
         <div className="min-w-0 space-y-4">
           {metrics.length > 0 && (
-            <div className="rounded-xl border border-border p-4">
-              <h4 className="mb-3 font-display text-sm font-semibold text-content">Key metrics</h4>
-              <ul className="space-y-2.5">
+            <div className="rounded-xl border border-border p-5">
+              <h4 className="mb-4 font-display text-[14px] font-semibold text-content">Key metrics</h4>
+              <ul className="space-y-3">
                 {metrics.map((m) => (
-                  <li key={m.id} className="text-sm">
+                  <li key={m.id} className="text-[13px]">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-muted">{METRIC_TYPE_LABELS[m.metricType]}</span>
+                      <span className="font-medium text-muted">{METRIC_TYPE_LABELS[m.metricType]}</span>
                       <span className="flex items-center gap-2">
                         <span className="font-semibold tabular-nums text-content">
                           {formatMetricValue(m.metricType, m.value)}

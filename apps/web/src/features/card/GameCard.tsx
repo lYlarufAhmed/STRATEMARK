@@ -8,16 +8,19 @@
  *  - Strong 4-level hierarchy: name 18px → numbers 18px → body 13px → meta 11px
  *  - Teal accents only on interactive/score elements
  */
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Bookmark,
   Building2,
+  ExternalLink,
   Heart,
   Landmark,
   Layers,
   Lightbulb,
   MapPin,
+  MessageCircle,
   MoreHorizontal,
+  Share2,
   ShieldAlert,
   Star,
   TrendingUp,
@@ -349,9 +352,7 @@ export function GameCard({ data, onOpen, className }: GameCardProps) {
           >
             <Bookmark className="h-3.5 w-3.5" strokeWidth={1.5} fill={saved ? 'currentColor' : 'none'} />
           </Button>
-          <Button variant="ghost" size="icon" className="h-6 w-6 border-0 text-faint hover:text-content" tabIndex={-1}>
-            <MoreHorizontal className="h-3.5 w-3.5" strokeWidth={1.5} />
-          </Button>
+          <CardMoreMenu />
         </div>
         {/* Save toast */}
         {toast && (
@@ -361,5 +362,46 @@ export function GameCard({ data, onOpen, className }: GameCardProps) {
         )}
       </CardFooter>
     </Card>
+  );
+}
+
+/** More menu dropdown on each card. */
+function CardMoreMenu() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <Button
+        variant="ghost" size="icon"
+        className="h-6 w-6 border-0 text-faint hover:text-content"
+        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+        tabIndex={-1}
+      >
+        <MoreHorizontal className="h-3.5 w-3.5" strokeWidth={1.5} />
+      </Button>
+      {open && (
+        <div className="absolute bottom-full right-0 z-30 mb-1 w-40 rounded-lg border border-border bg-surface p-1 shadow-card" onClick={(e) => e.stopPropagation()}>
+          <button type="button" className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-[12px] text-content hover:bg-surface-2" onClick={() => setOpen(false)}>
+            <Share2 className="h-3.5 w-3.5 text-muted" /> Share
+          </button>
+          <button type="button" className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-[12px] text-content hover:bg-surface-2" onClick={() => setOpen(false)}>
+            <MessageCircle className="h-3.5 w-3.5 text-muted" /> Research
+          </button>
+          <button type="button" className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-[12px] text-content hover:bg-surface-2" onClick={() => setOpen(false)}>
+            <ExternalLink className="h-3.5 w-3.5 text-muted" /> Open deck
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
