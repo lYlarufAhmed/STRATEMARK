@@ -281,3 +281,138 @@ export const dashboardDataSchema = z.object({
   contentJson: z.unknown(),
   lastRefreshedAt: isoTimestamp.nullable(),
 });
+
+// Reports & Research Threads ------------------------------------------------
+export const citationSchema = z.object({
+  title: z.string(),
+  url: z.string(),
+});
+
+export const reportSchema = z.object({
+  id: z.string(),
+  kind: z.enum(['deck', 'company']),
+  subjectId: z.string(),
+  title: z.string(),
+  markdown: z.string(),
+  citations: z.array(citationSchema).default([]),
+  createdAt: isoTimestamp,
+});
+
+export const researchScopeSchema = z.object({
+  kind: z.enum(['deck', 'company', 'cards', 'datapoint']),
+  deckId: z.string().nullable(),
+  companyId: z.string().nullable().optional(),
+  cardIds: z.array(z.string()).optional(),
+  subject: z.string().nullable().optional(),
+});
+
+export const threadMessageSchema = z.object({
+  id: z.string(),
+  role: z.enum(['user', 'assistant']),
+  text: z.string(),
+  citations: z.array(citationSchema).default([]),
+  at: isoTimestamp,
+});
+
+export const researchThreadSchema = z.object({
+  id: z.string(),
+  scope: researchScopeSchema,
+  title: z.string(),
+  messages: z.array(threadMessageSchema).default([]),
+  reportId: z.string().nullable(),
+  createdAt: isoTimestamp,
+  updatedAt: isoTimestamp,
+});
+
+// Repo Snapshot for Brain Import / Export -----------------------------------
+export const repoSnapshotSchema = z.object({
+  markets: z.array(marketSchema).default([]),
+  decks: z.array(deckSchema).default([]),
+  companies: z.array(companySchema).default([]),
+  metrics: z.array(companyMetricSchema).default([]),
+  cards: z.array(cardSchema).default([]),
+  viceClaims: z.array(viceClaimSchema).default([]),
+  reports: z.array(reportSchema).default([]),
+  threads: z.array(researchThreadSchema).default([]),
+});
+
+export interface ParsedRepoSnapshotResult {
+  snapshot: z.infer<typeof repoSnapshotSchema>;
+  totalItems: number;
+  validItems: number;
+  skippedItems: number;
+  warnings: string[];
+}
+
+export function parseRepoSnapshot(raw: unknown): ParsedRepoSnapshotResult {
+  if (typeof raw !== 'object' || raw === null) {
+    return {
+      snapshot: {
+        markets: [],
+        decks: [],
+        companies: [],
+        metrics: [],
+        cards: [],
+        viceClaims: [],
+        reports: [],
+        threads: [],
+      },
+      totalItems: 0,
+      validItems: 0,
+      skippedItems: 0,
+      warnings: ['Invalid JSON snapshot format: root must be an object.'],
+    };
+  }
+
+  const obj = raw as Record<string, unknown>;
+  const warnings: string[] = [];
+  let totalItems = 0;
+  let validItems = 0;
+  let skippedItems = 0;
+
+  function parseCollection<T extends z.ZodTypeAny>(
+    key: string,
+    schema: T,
+  ): z.infer<T>[] {
+    const rawList = Array.isArray(obj[key]) ? (obj[key] as unknown[]) : [];
+    totalItems += rawList.length;
+    const result: z.infer<T>[] = [];
+    let skipped = 0;
+
+    for (const item of rawList) {
+      const parsed = schema.safeParse(item);
+      if (parsed.success) {
+        result.push(parsed.data);
+        validItems++;
+      } else {
+        skipped++;
+        skippedItems++;
+      }
+    }
+
+    if (skipped > 0) {
+      warnings.push(`Skipped ${skipped} invalid item(s) in '${key}'.`);
+    }
+
+    return result;
+  }
+
+  const snapshot = {
+    markets: parseCollection('markets', marketSchema),
+    decks: parseCollection('decks', deckSchema),
+    companies: parseCollection('companies', companySchema),
+    metrics: parseCollection('metrics', companyMetricSchema),
+    cards: parseCollection('cards', cardSchema),
+    viceClaims: parseCollection('viceClaims', viceClaimSchema),
+    reports: parseCollection('reports', reportSchema),
+    threads: parseCollection('threads', researchThreadSchema),
+  };
+
+  return {
+    snapshot,
+    totalItems,
+    validItems,
+    skippedItems,
+    warnings,
+  };
+}

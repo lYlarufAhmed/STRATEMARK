@@ -1,5 +1,6 @@
 import express from 'express';
 import { runDeckResearch, createGeminiClient } from '@mi/research';
+import { parseRepoSnapshot } from '@mi/contracts';
 import { config } from './config.js';
 import { scrapeAllSources, scrapeCompany } from './scrapers/index.js';
 import { classifyChanges } from './classify/index.js';
@@ -19,6 +20,7 @@ import {
   setUserMetric,
   setUserViceClaim,
   createCompany,
+  importUserBrainSnapshot,
 } from './lib/firestore.js';
 import { sendBatchAlerts } from './lib/email.js';
 import { createCheckoutSession, createPortalSession, getStripe, PLANS, type PlanTier } from './lib/stripe.js';
@@ -384,6 +386,49 @@ app.post('/api/webhook/paddle', express.json(), async (req, res) => {
   } catch (err) {
     console.error('Paddle webhook error:', err);
     res.status(500).json({ error: 'Paddle webhook processing failed' });
+  }
+});
+
+// ── Cloud Brain Import Endpoint ──────────────────────────────────────────────
+app.post('/api/v1/brain/import', authenticateToken, async (req: AuthRequest, res) => {
+  const userId = req.user?.uid;
+  if (!userId) {
+    return res.status(401).json({ error: 'Unauthorized: missing authenticated user' });
+  }
+
+  const { snapshot: rawSnapshot, mode = 'merge' } = req.body ?? {};
+  if (!rawSnapshot || typeof rawSnapshot !== 'object') {
+    return res.status(400).json({ error: 'Invalid payload: snapshot object required' });
+  }
+
+  const { snapshot, totalItems, validItems, skippedItems, warnings } = parseRepoSnapshot(rawSnapshot);
+
+  if (validItems === 0 && totalItems > 0) {
+    return res.status(400).json({
+      error: 'Import failed: all items in snapshot failed validation',
+      warnings,
+    });
+  }
+
+  try {
+    const { importedCount } = await importUserBrainSnapshot(
+      userId,
+      snapshot,
+      mode === 'replace' ? 'replace' : 'merge',
+    );
+
+    res.json({
+      status: 'ok',
+      mode,
+      importedCount,
+      totalItems,
+      validItems,
+      skippedItems,
+      warnings,
+    });
+  } catch (err) {
+    console.error('Failed to import user brain snapshot:', err);
+    res.status(500).json({ error: 'Failed to import user brain snapshot to cloud storage' });
   }
 });
 

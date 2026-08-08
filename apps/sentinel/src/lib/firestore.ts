@@ -224,3 +224,77 @@ export async function markAlertDelivered(alertId: string, userId?: string): Prom
   }
   await collections.alerts.doc(alertId).update({ deliveredAt: new Date().toISOString() });
 }
+
+/** Import user brain snapshot into user-scoped Firestore collections in chunks of 500 */
+export async function importUserBrainSnapshot(
+  userId: string,
+  snapshot: {
+    markets?: Market[];
+    decks?: Deck[];
+    cards?: Card[];
+    companies?: Company[];
+    metrics?: CompanyMetric[];
+    viceClaims?: ViceClaim[];
+    reports?: unknown[];
+    threads?: unknown[];
+  },
+  mode: 'merge' | 'replace' = 'merge',
+): Promise<{ importedCount: number }> {
+  const collectionKeys = [
+    { key: 'markets', col: USER_SCOPED_COLLECTIONS.MARKETS, items: snapshot.markets ?? [] },
+    { key: 'decks', col: USER_SCOPED_COLLECTIONS.DECKS, items: snapshot.decks ?? [] },
+    { key: 'cards', col: USER_SCOPED_COLLECTIONS.CARDS, items: snapshot.cards ?? [] },
+    { key: 'companies', col: USER_SCOPED_COLLECTIONS.COMPANIES, items: snapshot.companies ?? [] },
+    { key: 'metrics', col: USER_SCOPED_COLLECTIONS.METRICS, items: snapshot.metrics ?? [] },
+    { key: 'viceClaims', col: USER_SCOPED_COLLECTIONS.VICE_CLAIMS, items: snapshot.viceClaims ?? [] },
+    { key: 'reports', col: 'reports', items: snapshot.reports ?? [] },
+    { key: 'threads', col: 'threads', items: snapshot.threads ?? [] },
+  ];
+
+  if (mode === 'replace') {
+    for (const { col } of collectionKeys) {
+      const colRef = getUserScopedCollection(userId, col);
+      const snap = await colRef.get();
+      if (!snap.empty) {
+        let batch = db.batch();
+        let count = 0;
+        for (const doc of snap.docs) {
+          batch.delete(doc.ref);
+          count++;
+          if (count % 400 === 0) {
+            await batch.commit();
+            batch = db.batch();
+          }
+        }
+        if (count % 400 !== 0) {
+          await batch.commit();
+        }
+      }
+    }
+  }
+
+  let totalImported = 0;
+  let batch = db.batch();
+  let count = 0;
+
+  for (const { col, items } of collectionKeys) {
+    for (const item of items as (object & { id?: string })[]) {
+      if (!item || !item.id) continue;
+      const docRef = getUserScopedDocRef(userId, col, item.id);
+      batch.set(docRef, item, { merge: true });
+      count++;
+      totalImported++;
+
+      if (count % 400 === 0) {
+        await batch.commit();
+        batch = db.batch();
+      }
+    }
+  }
+
+  if (count % 400 !== 0) {
+    await batch.commit();
+  }
+
+  return { importedCount: totalImported };
+}

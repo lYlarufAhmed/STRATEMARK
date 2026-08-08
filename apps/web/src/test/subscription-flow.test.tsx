@@ -1,6 +1,7 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { DemoProvider } from '@/lib/demo/DemoContext';
 import { GoogleAuthProvider } from '@/lib/auth/AuthContext';
 import { TaskManagerProvider } from '@/lib/tasks/TaskManagerContext';
@@ -8,21 +9,24 @@ import { TopBar } from '@/components/layout/TopBar';
 import { UpgradeModal } from '@/components/UpgradeModal';
 import SettingsPage from '@/features/settings/SettingsPage';
 import { RepositoryProvider } from '@/lib/repository/RepositoryProvider';
+import { createQueryClient } from '@/lib/query/queryClient';
 import { MockRepository } from '@mi/mocks';
 
 function TestAppShell() {
   return (
-    <GoogleAuthProvider>
-      <DemoProvider>
-        <TaskManagerProvider>
-          <RepositoryProvider repository={new MockRepository()}>
-            <TopBar />
-            <UpgradeModal />
-            <SettingsPage />
-          </RepositoryProvider>
-        </TaskManagerProvider>
-      </DemoProvider>
-    </GoogleAuthProvider>
+    <QueryClientProvider client={createQueryClient()}>
+      <GoogleAuthProvider>
+        <DemoProvider>
+          <TaskManagerProvider>
+            <RepositoryProvider repository={new MockRepository()}>
+              <TopBar />
+              <UpgradeModal />
+              <SettingsPage />
+            </RepositoryProvider>
+          </TaskManagerProvider>
+        </DemoProvider>
+      </GoogleAuthProvider>
+    </QueryClientProvider>
   );
 }
 

@@ -59,6 +59,25 @@ vi.mock('@google-cloud/firestore', () => {
         doc: (docId: string) => this.doc(`${colPath}/${docId}`),
       };
     }
+    batch() {
+      const ops: Array<() => Promise<void>> = [];
+      return {
+        set: (docRef: any, data: any, options?: any) => {
+          ops.push(() => docRef.set(data, options));
+        },
+        delete: (docRef: any) => {
+          ops.push(() => docRef.delete());
+        },
+        update: (docRef: any, data: any) => {
+          ops.push(() => docRef.update(data));
+        },
+        commit: async () => {
+          for (const op of ops) {
+            await op();
+          }
+        },
+      };
+    }
   }
 
   return {
@@ -307,6 +326,74 @@ describe('Sentinel API Authentication & Persistence', () => {
       const savedVice = await getUserViceClaim(userId, 'vc_1');
       expect(savedVice).toBeDefined();
       expect(savedVice?.claimText).toBe('High concentration risk');
+    });
+  });
+
+  describe('POST /api/v1/brain/import Cloud Brain Import', () => {
+    it('requires auth token', async () => {
+      const res = await request(app).post('/api/v1/brain/import').send({ snapshot: {} });
+      expect(res.status).toBe(401);
+    });
+
+    it('imports a valid user brain snapshot into user-scoped Firestore path', async () => {
+      const snapshot = {
+        markets: [
+          {
+            id: 'mkt_import_1',
+            name: 'Imported Market',
+            scopeDefinition: { vertical: 'Fintech', geography: null, notes: null },
+            refreshCadence: 'weekly',
+            createdAt: '2026-08-01T00:00:00Z',
+          },
+        ],
+        decks: [
+          {
+            id: 'deck_import_1',
+            marketId: 'mkt_import_1',
+            createdAt: '2026-08-01T00:00:00Z',
+            lastRefreshedAt: '2026-08-01T00:00:00Z',
+          },
+        ],
+      };
+
+      const res = await request(app)
+        .post('/api/v1/brain/import')
+        .set('Authorization', 'Bearer usr_brain_import_1')
+        .send({ snapshot, mode: 'merge' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('ok');
+      expect(res.body.importedCount).toBe(2);
+      expect(res.body.totalItems).toBe(2);
+      expect(res.body.validItems).toBe(2);
+      expect(res.body.skippedItems).toBe(0);
+    });
+
+    it('tolerantly filters invalid snapshot items and returns warnings', async () => {
+      const snapshot = {
+        markets: [
+          {
+            id: 'mkt_valid_1',
+            name: 'Valid Market',
+            scopeDefinition: { vertical: 'AI', geography: null, notes: null },
+            refreshCadence: 'weekly',
+            createdAt: '2026-08-01T00:00:00Z',
+          },
+          { invalidMarket: true },
+        ],
+      };
+
+      const res = await request(app)
+        .post('/api/v1/brain/import')
+        .set('Authorization', 'Bearer usr_brain_import_2')
+        .send({ snapshot, mode: 'merge' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.importedCount).toBe(1);
+      expect(res.body.totalItems).toBe(2);
+      expect(res.body.validItems).toBe(1);
+      expect(res.body.skippedItems).toBe(1);
+      expect(res.body.warnings).toContain("Skipped 1 invalid item(s) in 'markets'.");
     });
   });
 

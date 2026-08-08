@@ -16,8 +16,8 @@ import { createGeminiClient } from '@mi/research';
 import { looksLikeGeminiKey, sanitizeApiKey, useApiKey } from '@/lib/settings/apiKey';
 import { useRepository } from '@/lib/repository/RepositoryProvider';
 import { useDemo } from '@/lib/demo/DemoContext';
-
 import { useAuth } from '@/lib/auth/AuthContext';
+import { ImportBrainModal } from '@/components/ImportBrainModal';
 
 type TestState = { status: 'idle' | 'testing' | 'ok' | 'fail'; detail?: string };
 
@@ -29,6 +29,7 @@ export default function SettingsPage() {
   const [draft, setDraft] = useState(apiKey);
   const [saved, setSaved] = useState(false);
   const [test, setTest] = useState<TestState>({ status: 'idle' });
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [brainStatus, setBrainStatus] = useState<{
     type: 'idle' | 'loading' | 'success' | 'error';
     message?: string;
@@ -46,28 +47,6 @@ export default function SettingsPage() {
       }
     } catch {
       setBrainStatus({ type: 'error', message: 'Failed to export research brain snapshot.' });
-    }
-  };
-
-  const handleImport = async () => {
-    if (!repo.importBrain) return;
-    setBrainStatus({ type: 'loading', message: 'Importing research brain snapshot…' });
-    try {
-      const ok = await repo.importBrain();
-      if (ok) {
-        setBrainStatus({
-          type: 'success',
-          message: 'Research brain imported successfully! Reloading application data…',
-        });
-        setTimeout(() => window.location.reload(), 1000);
-      } else {
-        setBrainStatus({ type: 'idle' });
-      }
-    } catch {
-      setBrainStatus({
-        type: 'error',
-        message: 'Failed to import research brain snapshot. Invalid file format.',
-      });
     }
   };
 
@@ -279,12 +258,17 @@ export default function SettingsPage() {
           <button
             type="button"
             className="btn-secondary flex items-center gap-2"
-            onClick={handleImport}
+            onClick={() => setIsImportModalOpen(true)}
             disabled={brainStatus.type === 'loading'}
           >
             <Upload className="h-4 w-4" /> Import Brain Snapshot
           </button>
         </div>
+
+        <ImportBrainModal
+          open={isImportModalOpen}
+          onOpenChange={setIsImportModalOpen}
+        />
       </div>
 
       <div className="panel mt-6 space-y-4 p-6">
