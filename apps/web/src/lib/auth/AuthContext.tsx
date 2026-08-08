@@ -49,12 +49,24 @@ function getFirebaseConfig() {
   if (import.meta.env.MODE === 'test' || import.meta.env.VITEST) {
     return null;
   }
+  if (isElectron()) {
+    return null;
+  }
   const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
   const authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN;
   const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
   const appId = import.meta.env.VITE_FIREBASE_APP_ID;
 
-  if (!apiKey || apiKey === 'your-firebase-api-key') return null;
+  if (
+    !apiKey ||
+    apiKey === 'your-firebase-api-key' ||
+    apiKey.includes('demo') ||
+    apiKey.includes('placeholder') ||
+    !apiKey.startsWith('AIza') ||
+    apiKey.length < 20
+  ) {
+    return null;
+  }
   return { apiKey, authDomain, projectId, appId };
 }
 
@@ -155,7 +167,24 @@ export function GoogleAuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     let signedInUser: AuthUser | null = null;
     try {
-      if (authInstance) {
+      if (isElectron()) {
+        const ipcUser = window.miSecure?.googleSignIn
+          ? await window.miSecure.googleSignIn()
+          : window.mi?.googleSignIn
+            ? await window.mi.googleSignIn()
+            : null;
+        if (ipcUser) {
+          signedInUser = ipcUser;
+          setUser(signedInUser);
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(signedInUser));
+          } catch (err) {
+            console.warn('Failed to save user to localStorage:', err);
+          }
+        } else {
+          throw new Error('Google sign-in was canceled or failed in desktop application.');
+        }
+      } else if (authInstance) {
         const provider = new FirebaseGoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
         try {
@@ -183,23 +212,6 @@ export function GoogleAuthProvider({ children }: { children: ReactNode }) {
             const popupMsg = (popupErr as { message?: string })?.message;
             throw new Error(popupMsg || 'Google sign-in failed.');
           }
-        }
-      } else if (isElectron()) {
-        const ipcUser = window.miSecure?.googleSignIn
-          ? await window.miSecure.googleSignIn()
-          : window.mi?.googleSignIn
-            ? await window.mi.googleSignIn()
-            : null;
-        if (ipcUser) {
-          signedInUser = ipcUser;
-          setUser(signedInUser);
-          try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(signedInUser));
-          } catch (err) {
-            console.warn('Failed to save user to localStorage:', err);
-          }
-        } else {
-          throw new Error('Google sign-in was canceled or failed in desktop application.');
         }
       } else if (import.meta.env.MODE === 'test' || import.meta.env.VITEST) {
         signedInUser = {
