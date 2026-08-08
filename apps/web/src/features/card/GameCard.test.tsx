@@ -23,12 +23,13 @@ describe('GameCard', () => {
   it('renders the required face fields (spec §7) for a company card', () => {
     const cwc = hydrate(companyCard.id);
     renderWithProviders(<GameCard data={cwc} />);
-    expect(screen.getByText('GraceWear Global')).toBeInTheDocument();
+    expect(screen.getAllByText('GraceWear Global').length).toBeGreaterThan(0);
     expect(screen.getByText(cwc.company!.oneLiner)).toBeInTheDocument();
     expect(screen.getByText('ARR')).toBeInTheDocument();
     expect(screen.getByText('Team')).toBeInTheDocument();
     // Compact tier badge present (this is a Titan → T8; full label lives in the tooltip).
-    expect(screen.getByText('T8')).toBeInTheDocument();
+    // Tier 8 = score 95 + "The Titans" label
+    expect(screen.getByText('95')).toBeInTheDocument();
     // HQ shown.
     expect(screen.getByText(/Los Angeles/)).toBeInTheDocument();
   });

@@ -489,7 +489,6 @@ function TypeNav({
       className="mb-5 flex items-center gap-1.5 rounded-full bg-surface-2 p-1"
       aria-label="Filter deck by card type"
     >
-      <Tab label="All" count={cards.length} selected={active === null} onClick={() => onSelect(null)} />
       {primaryTabs.map((t) => (
         <Tab
           key={t}

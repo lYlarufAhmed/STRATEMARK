@@ -51,7 +51,8 @@ describe('end-to-end deck flow (markets → deck → 2-level split → card → 
     // Level 0 — full deck with the persistent card-type nav. Filtering happens
     // in place now, so verify the nav renders and then group by tier directly
     // (the old drill-down screen is gone).
-    expect(await screen.findByRole('button', { name: /^all\b/i }, FIND)).toBeInTheDocument();
+    // The type nav should be visible with at least one category tab.
+    expect(await screen.findByTestId('type-nav', undefined, FIND)).toBeInTheDocument();
     const tierBtn = await screen.findByRole('button', { name: /group by tier/i }, FIND);
     await user.click(tierBtn);
 

@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
-/** Tiny className combiner. */
+/** Merge classnames with Tailwind conflict resolution (shadcn standard). */
 export function cn(...inputs: ClassValue[]): string {
-  return clsx(inputs);
+  return twMerge(clsx(inputs));
 }
