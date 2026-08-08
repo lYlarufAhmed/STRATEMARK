@@ -3,7 +3,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   ExternalLink,
-  KeyRound,
   Loader2,
   ShieldCheck,
   Trash2,
@@ -65,7 +64,6 @@ export default function SettingsPage() {
 
       <div className="panel mt-6 space-y-4 p-6">
         <div className="flex items-center gap-2">
-          <KeyRound className="h-5 w-5 text-primary-ink" />
           <h2 className="font-display text-lg text-content">Google AI Studio API key</h2>
           {hasKey && (
             <span className="chip border-emerald-300 bg-emerald-50 text-emerald-700">

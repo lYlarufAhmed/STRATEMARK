@@ -247,7 +247,7 @@ export function DeepDiveProviderWithPanel({ children }: { children: ReactNode })
           AppShell adds a right margin to the main area when this is open. */}
       <aside
         className={cn(
-          'fixed right-0 top-0 z-40 flex h-full w-[400px] flex-col border-l border-border bg-surface transition-transform duration-300 ease-out',
+          'fixed right-0 top-0 z-40 flex h-full w-full flex-col border-l border-border bg-surface transition-transform duration-300 ease-out sm:w-[400px]',
           openState ? 'translate-x-0' : 'translate-x-full',
         )}
         role="dialog"

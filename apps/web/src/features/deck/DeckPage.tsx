@@ -114,9 +114,9 @@ export default function DeckPage() {
         </Link>
 
         {/* Title row */}
-        <div className="mt-2 flex items-center justify-between gap-4">
+        <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <div>
-            <h1 className="font-display text-[28px] font-bold tracking-tight text-content">
+            <h1 className="font-display text-[22px] font-bold tracking-tight text-content sm:text-[28px]">
               {market.data?.name ?? 'Deck'}
             </h1>
             {market.data?.scopeDefinition && (
@@ -129,8 +129,8 @@ export default function DeckPage() {
             )}
           </div>
 
-          {/* Compact action bar — smaller buttons, no labels on small screens */}
-          <div className="flex items-center gap-1.5">
+          {/* Compact action bar */}
+          <div className="flex flex-wrap items-center gap-1.5">
             <button
               type="button"
               className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-[12px] font-medium text-content transition-colors hover:bg-surface-2"
@@ -454,7 +454,7 @@ function TypeNav({
   return (
     <nav
       data-testid="type-nav"
-      className="mb-5 flex items-center gap-1 border-b border-border"
+      className="mb-5 flex items-center gap-1 overflow-x-auto border-b border-border"
       aria-label="Filter deck by card type"
     >
       {primaryTabs.map((t) => (
