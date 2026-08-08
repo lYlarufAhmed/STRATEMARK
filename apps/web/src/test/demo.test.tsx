@@ -1,9 +1,16 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { DemoProvider, useDemo } from '@/lib/demo/DemoContext';
 import { GoogleAuthProvider } from '@/lib/auth/AuthContext';
+import { RepositoryProvider } from '@/lib/repository/RepositoryProvider';
+import { TaskManagerProvider } from '@/lib/tasks/TaskManagerContext';
 import { UpgradeModal } from '@/components/UpgradeModal';
+import { createQueryClient } from '@/lib/query/queryClient';
+import { makeRepo } from './test-utils';
+import NewDeckPage from '@/features/deck/NewDeckPage';
 
 function DemoTestComponent() {
   const {
@@ -107,5 +114,96 @@ describe('Demo Mode System & Query Counter', () => {
 
     expect(screen.getByText('Unlock Stratemark Pro')).toBeInTheDocument();
     expect(screen.getByText(/Web Scraping is available in Pro/i)).toBeInTheDocument();
+  });
+});
+
+describe('NewDeckPage Deck Creation in Demo Mode', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  function renderNewDeckApp() {
+    const repository = makeRepo();
+    const queryClient = createQueryClient();
+    return {
+      user: userEvent.setup(),
+      repository,
+      ...render(
+        <RepositoryProvider repository={repository}>
+          <QueryClientProvider client={queryClient}>
+            <GoogleAuthProvider>
+              <DemoProvider>
+                <TaskManagerProvider>
+                  <MemoryRouter initialEntries={['/markets/new']}>
+                    <Routes>
+                      <Route path="/markets/new" element={<NewDeckPage />} />
+                      <Route path="/research/:taskId" element={<div>Live Research Task View</div>} />
+                    </Routes>
+                    <UpgradeModal />
+                  </MemoryRouter>
+                </TaskManagerProvider>
+              </DemoProvider>
+            </GoogleAuthProvider>
+          </QueryClientProvider>
+        </RepositoryProvider>,
+      ),
+    };
+  }
+
+  it('allows deck creation and navigates to research when queries remain', async () => {
+    const { user } = renderNewDeckApp();
+
+    const textarea = screen.getByPlaceholderText(/Direct-to-consumer Christian apparel brands/i);
+    await user.type(textarea, 'AI code-review startups');
+
+    const submitBtn = screen.getByRole('button', { name: /Build sample deck|Research & build deck/i });
+    await user.click(submitBtn);
+
+    expect(await screen.findByText('Live Research Task View')).toBeInTheDocument();
+  });
+
+  it('allows deck creation on last query and opens UpgradeModal warning', async () => {
+    // Consume 2 queries beforehand
+    localStorage.setItem('stratemark_demo_queries_remaining', '1');
+
+    const { user } = renderNewDeckApp();
+
+    const textarea = screen.getByPlaceholderText(/Direct-to-consumer Christian apparel brands/i);
+    await user.type(textarea, 'Precision fermentation companies');
+
+    const submitBtn = screen.getByRole('button', { name: /Build sample deck|Research & build deck/i });
+    await user.click(submitBtn);
+
+    // Navigates to live research
+    expect(await screen.findByText('Live Research Task View')).toBeInTheDocument();
+
+    // And upgrade modal pops up warning that was the last demo query
+    expect(screen.getByText('Unlock Stratemark Pro')).toBeInTheDocument();
+    expect(
+      screen.getByText(/That was your last demo query! Upgrade to Pro for unlimited AI market research./i),
+    ).toBeInTheDocument();
+  });
+
+  it('blocks deck creation and triggers UpgradeModal when queries are exhausted', async () => {
+    // Queries exhausted
+    localStorage.setItem('stratemark_demo_queries_remaining', '0');
+
+    const { user } = renderNewDeckApp();
+
+    const textarea = screen.getByPlaceholderText(/Direct-to-consumer Christian apparel brands/i);
+    await user.type(textarea, 'Non-alcoholic spirits brands');
+
+    const submitBtn = screen.getByRole('button', { name: /Build sample deck|Research & build deck/i });
+    await user.click(submitBtn);
+
+    // Does NOT navigate to live research view
+    expect(screen.queryByText('Live Research Task View')).not.toBeInTheDocument();
+    expect(screen.getByText('What market should we map?')).toBeInTheDocument();
+
+    // UpgradeModal pops up blocking research
+    expect(screen.getByText('Unlock Stratemark Pro')).toBeInTheDocument();
+    expect(
+      screen.getByText(/You have used all 3 dynamic demo queries. Upgrade to Pro for unlimited AI research./i),
+    ).toBeInTheDocument();
   });
 });

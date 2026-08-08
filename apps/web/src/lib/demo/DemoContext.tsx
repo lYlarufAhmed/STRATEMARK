@@ -29,15 +29,18 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const { user, isAuthenticated } = useAuth();
 
   const [remainingDemoQueries, setRemainingDemoQueries] = useState<number>(() => {
-    if (import.meta.env.MODE === 'test' || import.meta.env.VITEST) {
-      return INITIAL_DEMO_QUERIES;
-    }
     try {
       const stored = localStorage.getItem(STORAGE_KEY_DEMO_QUERIES);
-      return stored !== null ? Math.max(0, parseInt(stored, 10)) : INITIAL_DEMO_QUERIES;
+      if (stored !== null) {
+        const parsed = parseInt(stored, 10);
+        if (!isNaN(parsed)) {
+          return Math.max(0, parsed);
+        }
+      }
     } catch {
-      return INITIAL_DEMO_QUERIES;
+      // ignore
     }
+    return INITIAL_DEMO_QUERIES;
   });
 
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
