@@ -54,21 +54,21 @@ export interface ChartTheme {
 }
 
 const CHART_LIGHT: ChartTheme = {
-  axis: '#AEAEB2', // --c-faint
-  grid: '#F0F0F2', // subtler than the border
+  axis: '#A3ACA9', // --c-faint
+  grid: '#F0F3F2', // lighter than surface-2
   tooltipBg: '#FFFFFF',
-  tooltipBorder: '#E5E5E7', // --c-border
-  tooltipText: '#1D1D1F', // --c-content
+  tooltipBorder: '#DDE8E5', // --c-border
+  tooltipText: '#171A19', // --c-content
   sliceStroke: '#FFFFFF',
 };
 
 const CHART_DARK: ChartTheme = {
-  axis: '#8E8E93', // --c-faint
-  grid: '#2C2C2E', // --c-surface-2
-  tooltipBg: '#2C2C2E',
-  tooltipBorder: '#38383A', // --c-border
-  tooltipText: '#F5F5F7', // --c-content
-  sliceStroke: '#1C1C1E', // --c-surface
+  axis: '#707876', // --c-faint
+  grid: '#242826', // --c-surface-2
+  tooltipBg: '#242826',
+  tooltipBorder: '#343A38', // --c-border
+  tooltipText: '#EDF0EF', // --c-content
+  sliceStroke: '#181B1A', // --c-surface
 };
 
 export function chartTheme(isDark: boolean): ChartTheme {

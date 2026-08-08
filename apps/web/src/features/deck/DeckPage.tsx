@@ -11,7 +11,6 @@ import {
   RefreshCw,
   Search,
   Settings,
-  SlidersHorizontal,
   SquareMousePointer,
   Target,
   X,
@@ -106,54 +105,63 @@ export default function DeckPage() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      {/* Header */}
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <Link to="/history" className="mb-1 inline-flex items-center gap-1.5 text-sm text-muted hover:text-content">
-            <ArrowLeft className="h-4 w-4" />
-            Deck History
-          </Link>
-          <h1 className="font-display text-2xl font-semibold text-content">
-            {market.data?.name ?? 'Deck'}
-          </h1>
-          <Breadcrumbs split={split} typeParam={typeParam} onNavigate={setSplit} />
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Primary actions — always visible */}
-          <button
-            type="button"
-            className="btn-ghost"
-            disabled={!deckId}
-            title="Start a grounded conversation about this whole deck"
-            onClick={() =>
-              deckId &&
-              chat(
-                { kind: 'deck', deckId },
-                { placeholder: 'Ask about this market…' },
-              )
-            }
-          >
-            <MessagesSquare className="h-4 w-4" />
-            Ask deck
-          </button>
-          <button
-            type="button"
-            className={cn('btn-ghost', compare && 'border-primary/60 text-primary-ink')}
-            disabled={!deckId}
-            aria-pressed={compare}
-            title="Select cards, then ask a grounded question about exactly those"
-            onClick={() => (compare ? exitCompare() : setCompare(true))}
-          >
-            <SquareMousePointer className="h-4 w-4" />
-            {compare ? 'Cancel select' : 'Compare'}
-          </button>
-          <ThreadHistoryButton deckId={deckId} />
+      {/* ── Header — tight, structured, clear hierarchy ── */}
+      <div className="mb-6">
+        {/* Back link */}
+        <Link to="/history" className="inline-flex items-center gap-1 text-[12px] font-medium text-muted hover:text-primary-ink transition-colors">
+          <ArrowLeft className="h-3 w-3" />
+          Back
+        </Link>
 
-          {/* Secondary actions — inside a More menu */}
-          <MoreMenu
-            marketId={marketId}
-            refreshDeck={refreshDeck}
-          />
+        {/* Title row */}
+        <div className="mt-2 flex items-center justify-between gap-4">
+          <div>
+            <h1 className="font-display text-[28px] font-bold tracking-tight text-content">
+              {market.data?.name ?? 'Deck'}
+            </h1>
+            {market.data?.scopeDefinition && (
+              <p className="mt-0.5 text-[12px] text-faint">
+                {[
+                  all.filter(c => c.card.cardType === 'company').length + ' companies',
+                  market.data.scopeDefinition.geography,
+                ].filter(Boolean).join(' · ')}
+              </p>
+            )}
+          </div>
+
+          {/* Compact action bar — smaller buttons, no labels on small screens */}
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-[12px] font-medium text-content transition-colors hover:bg-surface-2"
+              disabled={!deckId}
+              onClick={() =>
+                deckId &&
+                chat(
+                  { kind: 'deck', deckId },
+                  { placeholder: 'Ask about this market…' },
+                )
+              }
+            >
+              <MessagesSquare className="h-3.5 w-3.5" />
+              Ask
+            </button>
+            <button
+              type="button"
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-[12px] font-medium text-content transition-colors hover:bg-surface-2',
+                compare && 'border-primary bg-primary/10 text-primary-ink',
+              )}
+              disabled={!deckId}
+              aria-pressed={compare}
+              onClick={() => (compare ? exitCompare() : setCompare(true))}
+            >
+              <SquareMousePointer className="h-3.5 w-3.5" />
+              {compare ? 'Cancel' : 'Compare'}
+            </button>
+            <ThreadHistoryButton deckId={deckId} />
+            <MoreMenu marketId={marketId} refreshDeck={refreshDeck} />
+          </div>
         </div>
       </div>
 
@@ -219,31 +227,21 @@ export default function DeckPage() {
               </div>
             );
           }
-          // Level 0 — the full deck, with a persistent card-type nav that
-          // re-filters the grid in place.
-          const filtered = typeParam ? list.filter((c) => c.card.cardType === typeParam) : list;
+          // Level 0 — show company cards by default (the primary view).
+          // Other types are accessible via the category nav.
+          const defaultType: CardType = typeParam ?? 'company';
+          const filtered = list.filter((c) => c.card.cardType === defaultType);
           return (
             <section>
               <TypeNav
                 cards={list}
-                active={typeParam}
+                active={defaultType}
                 onSelect={(t) => setSplit(t ? { type: t } : {})}
               />
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm text-muted">
-                  {typeParam
-                    ? `${filtered.length} ${CARD_TYPE_LABELS[typeParam].toLowerCase()} card${filtered.length === 1 ? '' : 's'}`
-                    : `${list.length} cards across ${countByType.size} categories`}
+              <div className="mb-4">
+                <p className="text-[12px] text-muted">
+                  {filtered.length} {CARD_TYPE_LABELS[defaultType].toLowerCase()} {filtered.length === 1 ? 'company' : 'companies'}
                 </p>
-                <button
-                  type="button"
-                  className="btn-ghost"
-                  onClick={() => setSplit({ split: 'company' })}
-                  title="Group company cards into the eight maturity tiers"
-                >
-                  <SlidersHorizontal className="h-4 w-4" />
-                  Group by tier
-                </button>
               </div>
               {filtered.length > 0 ? (
                 <CardGrid
@@ -374,36 +372,6 @@ function MoreMenu({
   );
 }
 
-function Breadcrumbs({
-  split,
-  typeParam,
-  onNavigate,
-}: {
-  split: string | null;
-  typeParam: CardType | null;
-  onNavigate: (next: { split?: string; type?: string }) => void;
-}) {
-  const crumb = (label: string, onClick?: () => void, current = false) =>
-    onClick && !current ? (
-      <button type="button" className="hover:text-content" onClick={onClick}>
-        {label}
-      </button>
-    ) : (
-      <span className={current ? 'text-content' : ''}>{label}</span>
-    );
-
-  return (
-    <nav className="mt-1 flex items-center gap-1.5 text-sm text-muted" aria-label="Deck breadcrumb">
-      {crumb('Full deck', () => onNavigate({}), !split)}
-      {split && <ChevronRight className="h-3.5 w-3.5" />}
-      {split && crumb('Card types', () => onNavigate({ split: 'types' }), split === 'types' && !typeParam)}
-      {split === 'company' && <ChevronRight className="h-3.5 w-3.5" />}
-      {split === 'company' && crumb('Company · tiers', undefined, true)}
-      {split === 'types' && typeParam && <ChevronRight className="h-3.5 w-3.5" />}
-      {split === 'types' && typeParam && crumb(CARD_TYPE_LABELS[typeParam], undefined, true)}
-    </nav>
-  );
-}
 
 function SubDeckTile({
   type,
@@ -470,14 +438,14 @@ function TypeNav({
       onClick={onClick}
       aria-pressed={selected}
       className={cn(
-        'whitespace-nowrap rounded-full px-4 py-1.5 text-[13px] font-medium transition-all',
+        'whitespace-nowrap border-b-2 px-4 py-2 text-[13px] font-medium transition-colors',
         selected
-          ? 'bg-content text-bg shadow-soft'
-          : 'text-muted hover:bg-surface-2 hover:text-content',
+          ? 'border-primary text-primary'
+          : 'border-transparent text-muted hover:text-content',
       )}
     >
       {label}
-      <span className={cn('ml-1.5 tabular-nums text-[11px]', selected ? 'opacity-70' : 'text-faint')}>
+      <span className={cn('ml-1.5 tabular-nums text-[11px]', selected ? 'text-primary/60' : 'text-faint')}>
         {count}
       </span>
     </button>
@@ -486,7 +454,7 @@ function TypeNav({
   return (
     <nav
       data-testid="type-nav"
-      className="mb-5 flex items-center gap-1.5 rounded-full bg-surface-2 p-1"
+      className="mb-5 flex items-center gap-1 border-b border-border"
       aria-label="Filter deck by card type"
     >
       {primaryTabs.map((t) => (
@@ -547,7 +515,7 @@ function TypeOverflow({
         className={cn(
           'flex items-center gap-1 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-all',
           activeInOverflow
-            ? 'bg-content text-bg shadow-soft'
+            ? 'bg-primary text-primary-fg shadow-soft'
             : 'text-muted hover:bg-surface hover:text-content',
         )}
         aria-expanded={open}

@@ -373,7 +373,7 @@ export function DeepDiveProviderWithPanel({ children }: { children: ReactNode })
               />
               <button
                 type="submit"
-                className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-full bg-content text-bg transition-opacity disabled:opacity-40"
+                className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-full bg-primary text-primary-fg transition-opacity disabled:opacity-40"
                 disabled={!draft.trim() || busy}
                 aria-label="Send"
               >

@@ -1,41 +1,24 @@
 /**
- * Theme toggle — icon-only, cycles light → dark → system.
- *
- * No text label. The icon communicates the current mode; the tooltip and
- * aria-label explain it for anyone who needs words.
+ * Theme toggle — light / dark only (no system mode).
  */
-import { Laptop, Moon, Sun, type LucideIcon } from 'lucide-react';
-import { nextMode, useTheme, type ThemeMode } from '@/lib/settings/theme';
-
-const ICON: Record<ThemeMode, LucideIcon> = {
-  light: Sun,
-  dark: Moon,
-  system: Laptop,
-};
-
-const LABEL: Record<ThemeMode, string> = {
-  light: 'Light',
-  dark: 'Dark',
-  system: 'System',
-};
+import { Moon, Sun } from 'lucide-react';
+import { useTheme } from '@/lib/settings/theme';
 
 export function ThemeToggle() {
-  const mode = useTheme((s) => s.mode);
   const resolved = useTheme((s) => s.resolved);
-  const cycle = useTheme((s) => s.cycle);
+  const setMode = useTheme((s) => s.setMode);
 
-  const Icon = ICON[mode];
-  const state = mode === 'system' ? `System (${resolved})` : LABEL[mode];
+  const isDark = resolved === 'dark';
 
   return (
     <button
       type="button"
-      onClick={cycle}
+      onClick={() => setMode(isDark ? 'light' : 'dark')}
       className="grid h-8 w-8 place-items-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-content"
-      title={`${state} — switch to ${LABEL[nextMode(mode)]}`}
-      aria-label={`Theme: ${state}. Switch to ${LABEL[nextMode(mode)]}.`}
+      title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
-      <Icon className="h-4 w-4" aria-hidden="true" />
+      {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
     </button>
   );
 }

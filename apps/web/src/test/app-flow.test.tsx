@@ -49,18 +49,10 @@ describe('end-to-end deck flow (markets → deck → 2-level split → card → 
     await user.click(marketBtn);
 
     // Level 0 — full deck with the persistent card-type nav. Filtering happens
-    // in place now, so verify the nav renders and then group by tier directly
-    // (the old drill-down screen is gone).
-    // The type nav should be visible with at least one category tab.
+    // The type nav should be visible with company cards shown by default.
     expect(await screen.findByTestId('type-nav', undefined, FIND)).toBeInTheDocument();
-    const tierBtn = await screen.findByRole('button', { name: /group by tier/i }, FIND);
-    await user.click(tierBtn);
 
-    // Company cards grouped into the 8 tier-decks (labels in headers + card badges).
-    expect((await screen.findAllByText('The Titans', undefined, FIND)).length).toBeGreaterThan(0);
-    expect(screen.getAllByText('The Sandbox').length).toBeGreaterThan(0);
-
-    // Open a Titan card → reader → dashboard.
+    // Open a company card → reader → dashboard.
     const card = await screen.findByRole('button', { name: /GraceWear Global/ }, FIND);
     await user.click(card);
     const dialog = await screen.findByRole('dialog', undefined, FIND);

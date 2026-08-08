@@ -23,6 +23,7 @@ import {
 import { useRepository } from '@/lib/repository/RepositoryProvider';
 import { useApiKey } from '@/lib/settings/apiKey';
 import { cn } from '@/lib/cn';
+import wordmark from '@/assets/wordmark.svg';
 import { useResearchSession } from './research-session';
 
 const SUGGESTIONS = [
@@ -137,9 +138,12 @@ function InputPill({
           disabled={disabled} autoFocus
         />
         <div className="mt-1.5 flex items-center justify-between">
-          <RegionPicker value={region} onChange={setRegion} disabled={disabled} />
+          <div className="flex items-center gap-2">
+            <img src={wordmark} alt="" className="h-3.5 opacity-40" />
+            <RegionPicker value={region} onChange={setRegion} disabled={disabled} />
+          </div>
           <button type="submit" disabled={!prompt.trim() || disabled}
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-content text-bg transition-opacity disabled:opacity-30"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-primary-fg transition-opacity disabled:opacity-30"
             aria-label="Research this market"
           ><ArrowUp className="h-4 w-4" /></button>
         </div>
@@ -227,9 +231,9 @@ export default function NewDeckPage() {
           /* ── Empty state ── */
           <div className="w-full max-w-2xl pb-32">
             <div className="mb-8">
-              <div className="flex items-center gap-2 text-[13px] text-muted">
-                <span className="font-semibold text-content">Stratemark</span>
-                <span>{timeLabel()}</span>
+              <div className="flex items-center gap-2">
+                <img src={wordmark} alt="Stratemark" className="h-5" />
+                <span className="text-[13px] text-muted">{timeLabel()}</span>
               </div>
               <h1 className="mt-1.5 font-display text-2xl font-semibold text-content md:text-3xl">
                 What market should we dive into?
@@ -259,7 +263,7 @@ export default function NewDeckPage() {
             {/* AI status card */}
             <div className="mt-5">
               <div className="mb-1 flex items-center gap-2 text-[11px] text-faint">
-                <span className="font-medium text-muted">Stratemark</span>
+                <img src={wordmark} alt="Stratemark" className="h-4" />
               </div>
 
               {running && (

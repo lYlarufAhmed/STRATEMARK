@@ -60,7 +60,7 @@ function IntelRow({ item, companyId, companyName }: { item: LiveIntelItem; compa
           companyId={companyId}
           companyName={companyName}
           context={item.summary || null}
-          label="Dig into this story"
+          label="Research this"
           className="ml-auto"
         />
       </div>

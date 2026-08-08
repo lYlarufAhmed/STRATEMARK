@@ -20,49 +20,49 @@
 :root {
   color-scheme: light;
 
-  --c-bg: 245 245 247;         /* #F5F5F7 Apple's page background */
-  --c-surface: 255 255 255;    /* #FFFFFF */
-  --c-surface-2: 250 250 252;  /* #FAFAFC subtle lift */
-  --c-border: 229 229 231;     /* #E5E5E7 hairline — present, not loud */
-  --c-content: 29 29 31;       /* #1D1D1F Apple ink */
-  --c-muted: 134 134 139;      /* #86868B secondary text */
-  --c-faint: 174 174 178;      /* #AEAEB2 tertiary / placeholder */
-  --c-primary: 0 122 255;      /* #007AFF Apple blue */
+  --c-bg: 244 248 247;         /* #F4F8F7 subtle green-grey canvas */
+  --c-surface: 255 255 255;    /* #FFFFFF crisp white */
+  --c-surface-2: 247 250 249;  /* #F7FAF9 barely lifted */
+  --c-border: 220 232 229;     /* #DCE8E5 */
+  --c-content: 23 26 25;       /* #171A19 charcoal ink */
+  --c-muted: 104 113 111;      /* #68716F secondary text */
+  --c-faint: 163 172 169;      /* #A3ACA9 tertiary */
+  --c-primary: 15 118 110;     /* #0F766E Deep Teal — accent only */
   --c-primary-fg: 255 255 255;
-  --c-primary-ink: 0 102 204;  /* #0066CC AA blue link */
-  --c-ink: 29 29 31;           /* #1D1D1F button pill */
+  --c-primary-ink: 15 118 110; /* #0F766E same teal for links */
+  --c-ink: 23 26 25;           /* #171A19 charcoal button pill */
   --c-ink-fg: 255 255 255;
-  --c-ink-hover: 58 58 60;     /* #3A3A3C */
-  --c-positive: 52 199 89;     /* #34C759 Apple green */
-  --c-neutral: 255 159 10;     /* #FF9F0A Apple orange */
-  --c-negative: 255 59 48;     /* #FF3B30 Apple red */
+  --c-ink-hover: 42 48 46;     /* #2A302E */
+  --c-positive: 22 163 106;    /* #16A36A */
+  --c-neutral: 217 154 37;     /* #D99A25 */
+  --c-negative: 229 72 77;     /* #E5484D */
 
-  --c-scrollbar: 210 210 215;  /* #D2D2D7 */
+  --c-scrollbar: 200 210 207;  /* #C8D2CF neutral scrollbar */
 
-  --s-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.06);
-  --s-card-hover: 0 2px 8px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.1);
-  --s-soft: 0 1px 2px rgba(0, 0, 0, 0.04), 0 2px 6px rgba(0, 0, 0, 0.04);
+  --s-card: 0 1px 2px rgba(0, 0, 0, 0.03), 0 2px 8px rgba(0, 0, 0, 0.04);
+  --s-card-hover: 0 2px 6px rgba(0, 0, 0, 0.05), 0 6px 20px rgba(0, 0, 0, 0.08);
+  --s-soft: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .dark {
   color-scheme: dark;
 
-  --c-bg: 0 0 0;              /* #000000 true black (Apple Dark Mode) */
-  --c-surface: 28 28 30;      /* #1C1C1E elevated surface */
-  --c-surface-2: 44 44 46;    /* #2C2C2E secondary surface */
-  --c-border: 56 56 58;       /* #38383A separator */
-  --c-content: 245 245 247;   /* #F5F5F7 primary text */
-  --c-muted: 161 161 166;     /* #A1A1A6 secondary text */
-  --c-faint: 142 142 147;     /* #8E8E93 tertiary */
-  --c-primary: 10 132 255;    /* #0A84FF Apple blue (dark) */
-  --c-primary-fg: 255 255 255;
-  --c-primary-ink: 64 156 255; /* #409CFF lifted for dark canvas */
-  --c-ink: 245 245 247;       /* pill inverts */
-  --c-ink-fg: 29 29 31;
-  --c-ink-hover: 229 229 234;  /* #E5E5EA */
-  --c-positive: 48 209 88;    /* #30D158 */
-  --c-neutral: 255 159 10;    /* #FF9F0A */
-  --c-negative: 255 69 58;    /* #FF453A */
+  --c-bg: 12 14 13;           /* #0C0E0D near-black, warm neutral */
+  --c-surface: 24 27 26;      /* #181B1A warm dark surface */
+  --c-surface-2: 36 40 38;    /* #242826 */
+  --c-border: 52 58 56;       /* #343A38 */
+  --c-content: 237 240 239;   /* #EDF0EF warm white */
+  --c-muted: 156 163 161;     /* #9CA3A1 */
+  --c-faint: 112 120 118;     /* #707876 */
+  --c-primary: 45 200 182;    /* #2DC8B6 lifted teal for dark */
+  --c-primary-fg: 12 14 13;   /* dark text on teal */
+  --c-primary-ink: 80 218 200; /* #50DAC8 bright teal for links */
+  --c-ink: 237 240 239;       /* pill inverts */
+  --c-ink-fg: 24 27 26;
+  --c-ink-hover: 215 220 218;  /* #D7DCDA */
+  --c-positive: 52 200 140;   /* #34C88C */
+  --c-neutral: 230 175 50;    /* #E6AF32 */
+  --c-negative: 240 100 100;  /* #F06464 */
 
   --c-scrollbar: 72 72 74;    /* #48484A */
 

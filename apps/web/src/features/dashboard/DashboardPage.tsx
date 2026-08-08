@@ -1,7 +1,7 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, NavLink, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, FileText, Search } from 'lucide-react';
+import { ArrowLeft, ChevronDown, FileText, Search } from 'lucide-react';
 import { DASHBOARD_TABS, DASHBOARD_TAB_LABELS, type DashboardTab } from '@mi/contracts';
 import { useCompany, useReports, useRerunDashboardTab } from '@/hooks/data';
 import { useRepository } from '@/lib/repository/RepositoryProvider';
@@ -54,7 +54,7 @@ function ResearchComposer({ companyId, companyName }: { companyId: string; compa
         />
       </div>
       <button type="submit" className="btn-ghost shrink-0 px-3 py-2 text-xs" disabled={!q.trim()}>
-        Dig
+        Research
       </button>
     </form>
   );
@@ -110,6 +110,81 @@ function TabView({ tab, companyId }: { tab: DashboardTab; companyId: string }) {
     case 'products_roadmap':
       return <ProductsRoadmapTab companyId={companyId} />;
   }
+}
+
+const VISIBLE_TAB_COUNT = 5;
+
+function DashboardTabNav({
+  companyId, activeTab, fromMarketId,
+}: {
+  companyId: string; activeTab: DashboardTab; fromMarketId: string | null;
+}) {
+  const [moreOpen, setMoreOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    const close = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setMoreOpen(false);
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [moreOpen]);
+
+  const visibleTabs = DASHBOARD_TABS.slice(0, VISIBLE_TAB_COUNT);
+  const overflowTabs = DASHBOARD_TABS.slice(VISIBLE_TAB_COUNT);
+  const activeInOverflow = overflowTabs.includes(activeTab);
+
+  const qs = fromMarketId ? `?deck=${fromMarketId}` : '';
+
+  return (
+    <nav className="mb-6 flex items-center gap-1 border-b border-border" aria-label="Company dashboard tabs">
+      {visibleTabs.map((t) => (
+        <NavLink
+          key={t}
+          to={`/company/${companyId}/dashboard/${t}${qs}`}
+          className={({ isActive }) => cn(
+            'whitespace-nowrap border-b-2 px-3.5 py-2 text-[13px] font-medium transition-colors',
+            isActive ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-content',
+          )}
+        >
+          {DASHBOARD_TAB_LABELS[t]}
+        </NavLink>
+      ))}
+      {overflowTabs.length > 0 && (
+        <div ref={ref} className="relative">
+          <button
+            type="button"
+            onClick={() => setMoreOpen(!moreOpen)}
+            className={cn(
+              'flex items-center gap-1 whitespace-nowrap border-b-2 px-3.5 py-2 text-[13px] font-medium transition-colors',
+              activeInOverflow ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-content',
+            )}
+          >
+            {activeInOverflow ? DASHBOARD_TAB_LABELS[activeTab] : 'More'}
+            <ChevronDown className={cn('h-3 w-3 transition-transform', moreOpen && 'rotate-180')} />
+          </button>
+          {moreOpen && (
+            <div className="absolute left-0 top-full z-30 mt-1 w-48 rounded-lg border border-border bg-surface p-1 shadow-card">
+              {overflowTabs.map((t) => (
+                <NavLink
+                  key={t}
+                  to={`/company/${companyId}/dashboard/${t}${qs}`}
+                  onClick={() => setMoreOpen(false)}
+                  className={({ isActive }) => cn(
+                    'block rounded-md px-3 py-1.5 text-[13px] transition-colors',
+                    isActive ? 'bg-surface-2 font-medium text-content' : 'text-muted hover:bg-surface-2 hover:text-content',
+                  )}
+                >
+                  {DASHBOARD_TAB_LABELS[t]}
+                </NavLink>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </nav>
+  );
 }
 
 export default function DashboardPage() {
@@ -179,7 +254,7 @@ export default function DashboardPage() {
                 topic="Recent developments & what to watch"
                 companyId={c.id}
                 companyName={c.name}
-                label="Dig deeper"
+                label="Research"
                 className="h-8 w-8 shrink-0"
               />
             </header>
@@ -190,28 +265,12 @@ export default function DashboardPage() {
               <IntelFile companyId={companyId} />
             </div>
 
-            {/* Locked 8-tab order (spec §8), deep-linkable routes. */}
-            <nav
-              className="mb-6 flex gap-1 overflow-x-auto border-b border-border pb-px"
-              aria-label="Company dashboard tabs"
-            >
-              {DASHBOARD_TABS.map((t) => (
-                <NavLink
-                  key={t}
-                  to={`/company/${companyId}/dashboard/${t}${fromMarketId ? `?deck=${fromMarketId}` : ''}`}
-                  className={({ isActive }) =>
-                    cn(
-                      'whitespace-nowrap rounded-t-lg border-b-2 px-3.5 py-2 text-sm font-medium transition-colors',
-                      isActive
-                        ? 'border-primary text-content'
-                        : 'border-transparent text-muted hover:text-content',
-                    )
-                  }
-                >
-                  {DASHBOARD_TAB_LABELS[t]}
-                </NavLink>
-              ))}
-            </nav>
+            {/* 6 visible tabs + overflow dropdown for the rest */}
+            <DashboardTabNav
+              companyId={companyId}
+              activeTab={activeTab}
+              fromMarketId={fromMarketId}
+            />
 
             {/* Right-click any tab's content → rerun just that research. */}
             <ContextRerun

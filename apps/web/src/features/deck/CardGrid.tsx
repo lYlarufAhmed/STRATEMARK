@@ -34,7 +34,7 @@ export function CardGrid({
   return (
     <>
       <div
-        className="grid grid-cols-[repeat(auto-fill,minmax(232px,1fr))] items-stretch gap-5"
+        className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] items-stretch gap-4"
         data-testid="card-grid"
       >
         {cards.map((c) => {
