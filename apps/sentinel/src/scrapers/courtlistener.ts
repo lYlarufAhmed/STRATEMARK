@@ -28,7 +28,7 @@ export async function scrapeCourtListener(
         companyName,
         sourceUrl,
         sourceTitle: caseName,
-        rawText: docket.summary || docket.case_name || 'Federal Court Docket Filing',
+        rawText: docket.summary || docket.case_name || docket.docket_number || companyName,
         discoveredAt: docket.date_filed || new Date().toISOString(),
       });
     }

@@ -6,7 +6,8 @@ export async function sendSlackWebhook(
 ): Promise<boolean> {
   if (!webhookUrl) return false;
 
-  const text = `🚨 *[STRATEMARK Sentinel Alert]* *${alert.companyName}* — ${alert.changeType}\n*Summary:* ${alert.summary}\n*Source:* ${alert.sourceUrl ? `<${alert.sourceUrl}|${alert.sourceTitle}>` : 'N/A'}`;
+  const deltaLine = alert.stateDeltaNote ? `\n*Update:* ${alert.stateDeltaNote}` : '';
+  const text = `🚨 *[STRATEMARK Sentinel Alert]* *${alert.companyName}* — ${alert.changeType}\n*Summary:* ${alert.summary}${deltaLine}\n*Source:* ${alert.sourceUrl ? `<${alert.sourceUrl}|${alert.sourceTitle}>` : 'N/A'}`;
 
   try {
     const res = await fetch(webhookUrl, {
@@ -26,7 +27,8 @@ export async function sendDiscordWebhook(
 ): Promise<boolean> {
   if (!webhookUrl) return false;
 
-  const content = `🚨 **[STRATEMARK Sentinel Alert]** **${alert.companyName}** — ${alert.changeType}\n**Summary:** ${alert.summary}\n**Source:** ${alert.sourceUrl ? `[${alert.sourceTitle}](${alert.sourceUrl})` : 'N/A'}`;
+  const deltaLine = alert.stateDeltaNote ? `\n**Update:** ${alert.stateDeltaNote}` : '';
+  const content = `🚨 **[STRATEMARK Sentinel Alert]** **${alert.companyName}** — ${alert.changeType}\n**Summary:** ${alert.summary}${deltaLine}\n**Source:** ${alert.sourceUrl ? `[${alert.sourceTitle}](${alert.sourceUrl})` : 'N/A'}`;
 
   try {
     const res = await fetch(webhookUrl, {

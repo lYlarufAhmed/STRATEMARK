@@ -36,6 +36,7 @@ export function enforceAlertProvenance(
     sourceUrl,
     sourceTitle,
     summary: change.summary,
+    stateDeltaNote: change.stateDeltaNote,
     createdAt: new Date().toISOString(),
     deliveredAt: null,
   };

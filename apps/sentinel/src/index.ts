@@ -147,9 +147,11 @@ app.post('/api/scrape', authenticateToken, async (req: AuthRequest, res) => {
     // Process companies for the authenticated user
     const userCompanies = await getCompaniesForUser(userId);
     if (userCompanies.length > 0) {
+      const existingAlerts = await getAlertsForUser(userId);
       const rawChanges = await scrapeAllSources(userCompanies);
-      const classified = await classifyChanges(rawChanges);
-      const alerts = enforceAlertsProvenance(classified, userId);
+      const classified = await classifyChanges(rawChanges, existingAlerts);
+      const nonDuplicateClassified = classified.filter((c) => !c.isDuplicate);
+      const alerts = enforceAlertsProvenance(nonDuplicateClassified, userId);
 
       const newAlerts = alerts.filter((a) => a.confidence !== 'unknown');
       for (const alert of newAlerts) {
@@ -186,9 +188,11 @@ app.post('/api/scrape', authenticateToken, async (req: AuthRequest, res) => {
       const companies = await getCompaniesForUser(user.id);
       if (companies.length === 0) continue;
 
+      const existingAlerts = await getAlertsForUser(user.id);
       const rawChanges = await scrapeAllSources(companies);
-      const classified = await classifyChanges(rawChanges);
-      const alerts = enforceAlertsProvenance(classified, user.id);
+      const classified = await classifyChanges(rawChanges, existingAlerts);
+      const nonDuplicateClassified = classified.filter((c) => !c.isDuplicate);
+      const alerts = enforceAlertsProvenance(nonDuplicateClassified, user.id);
 
       const newAlerts = alerts.filter((a) => a.confidence !== 'unknown');
       for (const alert of newAlerts) {

@@ -18,6 +18,7 @@ export interface SentinelAlert {
   sourceUrl: string | null;
   sourceTitle: string;
   summary: string;
+  stateDeltaNote?: string;
   createdAt: string;
   deliveredAt: string | null;
 }
