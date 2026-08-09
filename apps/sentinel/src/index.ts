@@ -23,6 +23,8 @@ import {
   importUserBrainSnapshot,
 } from './lib/firestore.js';
 import { sendBatchAlerts } from './lib/email.js';
+import { sendSlackWebhook, sendDiscordWebhook } from './lib/webhook.js';
+import { isDigestTimeForUser } from './lib/digest.js';
 import { createCheckoutSession, createPortalSession, getStripe, PLANS, type PlanTier } from './lib/stripe.js';
 import { authenticateToken, type AuthRequest } from './middleware/auth.js';
 import type { TrackedCompany, User } from './types.js';
@@ -156,12 +158,18 @@ app.post('/api/scrape', authenticateToken, async (req: AuthRequest, res) => {
 
       if (newAlerts.length > 0) {
         const user = await getUser(userId);
-        if (user?.email) {
-          const sent = await sendBatchAlerts(newAlerts, user.email);
+        if (user) {
           for (const alert of newAlerts) {
-            if (sent > 0) await markAlertDelivered(alert.id, userId);
+            if (user.slackWebhookUrl) await sendSlackWebhook(user.slackWebhookUrl, alert);
+            if (user.discordWebhookUrl) await sendDiscordWebhook(user.discordWebhookUrl, alert);
           }
-          totalAlerts += sent;
+          if (user.email && isDigestTimeForUser(user.timezone ?? 'UTC')) {
+            const sent = await sendBatchAlerts(newAlerts, user.email);
+            for (const alert of newAlerts) {
+              if (sent > 0) await markAlertDelivered(alert.id, userId);
+            }
+            totalAlerts += sent;
+          }
         }
       }
     }
@@ -188,11 +196,17 @@ app.post('/api/scrape', authenticateToken, async (req: AuthRequest, res) => {
       }
 
       if (newAlerts.length > 0) {
-        const sent = await sendBatchAlerts(newAlerts, user.email);
         for (const alert of newAlerts) {
-          if (sent > 0) await markAlertDelivered(alert.id, user.id);
+          if (user.slackWebhookUrl) await sendSlackWebhook(user.slackWebhookUrl, alert);
+          if (user.discordWebhookUrl) await sendDiscordWebhook(user.discordWebhookUrl, alert);
         }
-        totalAlerts += sent;
+        if (user.email && isDigestTimeForUser(user.timezone ?? 'UTC')) {
+          const sent = await sendBatchAlerts(newAlerts, user.email);
+          for (const alert of newAlerts) {
+            if (sent > 0) await markAlertDelivered(alert.id, user.id);
+          }
+          totalAlerts += sent;
+        }
       }
     }
 

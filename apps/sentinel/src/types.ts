@@ -35,9 +35,12 @@ export interface TrackedCompany {
 export interface User {
   id: string;
   email: string;
-  subscriptionTier: 'pro' | 'concierge' | 'enterprise';
+  subscriptionTier: 'pro' | 'team' | 'enterprise';
   subscriptionStatus: 'active' | 'trialing' | 'canceled';
   stripeCustomerId: string | null;
+  timezone?: string;
+  slackWebhookUrl?: string;
+  discordWebhookUrl?: string;
   createdAt: string;
 }
 
@@ -54,4 +57,7 @@ export interface ClassifiedChange extends ScrapedChange {
   changeType: ChangeType;
   confidence: number;
   summary: string;
+  isDuplicate?: boolean;
+  isStateUpdate?: boolean;
+  stateDeltaNote?: string;
 }

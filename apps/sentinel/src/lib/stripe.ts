@@ -14,21 +14,21 @@ export function getStripe(): Stripe {
 export const PLANS = {
   pro: {
     name: 'STRATEMARK Pro',
-    price: 4900,
-    interval: 'month' as const,
-    companies: 5,
-  },
-  concierge: {
-    name: 'STRATEMARK Concierge',
-    price: 14900,
+    price: 2900,
     interval: 'month' as const,
     companies: 10,
   },
+  team: {
+    name: 'STRATEMARK Team',
+    price: 7900,
+    interval: 'month' as const,
+    companies: 25,
+  },
   enterprise: {
     name: 'STRATEMARK Enterprise',
-    price: 24900,
+    price: 19900,
     interval: 'month' as const,
-    companies: 50,
+    companies: 100,
   },
 } as const;
 

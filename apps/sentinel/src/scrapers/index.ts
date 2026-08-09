@@ -1,4 +1,7 @@
 import type { ScrapedChange } from '../types.js';
+import { scrapeCourtListener } from './courtlistener.js';
+
+export { scrapeCourtListener };
 
 export async function scrapeEdgar(cik: string, companyName: string): Promise<ScrapedChange[]> {
   const url = `https://efts.sec.gov/LATEST/search-index?q=%22${encodeURIComponent(companyName)}%22&dateRange=custom&startdt=${daysAgo(1)}&enddt=${today()}`;
@@ -72,11 +75,12 @@ export async function scrapeCompany(company: {
   name: string;
   edgarCik?: string | null;
 }): Promise<ScrapedChange[]> {
-  const [edgarChanges, newsChanges] = await Promise.all([
+  const [edgarChanges, newsChanges, courtChanges] = await Promise.all([
     company.edgarCik ? scrapeEdgar(company.edgarCik, company.name) : Promise.resolve([]),
     scrapeGoogleNews(company.id, company.name),
+    scrapeCourtListener(company.id, company.name),
   ]);
-  return [...edgarChanges, ...newsChanges];
+  return [...edgarChanges, ...newsChanges, ...courtChanges];
 }
 
 export async function scrapeAllSources(

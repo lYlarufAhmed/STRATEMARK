@@ -1,7 +1,5 @@
 /**
  * Logo resolution — done ONCE at research time, not per render.
- *
- * Three audit findings converge on this module (docs/AUDIT-2026-07-29.md):
  *  · 2.2 — probing logo sources per card at render time cost 66 external
  *    requests to open a 24-card deck, with staggered pop-in and layout churn.
  *  · 3.1 — Wikidata → Wikimedia Commons serves true **vector SVG** logos for
