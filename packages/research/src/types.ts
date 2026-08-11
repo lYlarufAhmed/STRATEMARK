@@ -50,13 +50,7 @@ export type ResearchEvent =
   | { type: 'error'; message: string }
   | { type: 'done'; total: number };
 
-export type ResearchStep =
-  | 'interpret'
-  | 'discover'
-  | 'enrich'
-  | 'barriers'
-  | 'score'
-  | 'assemble';
+export type ResearchStep = 'interpret' | 'discover' | 'enrich' | 'barriers' | 'score' | 'assemble';
 
 export type OnResearchEvent = (event: ResearchEvent) => void;
 
@@ -73,7 +67,7 @@ export interface RunResearchOptions extends GeminiConfig {
   signal?: AbortSignal;
   /** Cap concurrent enrichment calls (free-tier friendly). Default 2. */
   concurrency?: number;
-  /** Rough target for how many company cards to research. Default 12. */
+  /** Rough target for how many company cards to research. Default 10. */
   targetCompanies?: number;
 }
 

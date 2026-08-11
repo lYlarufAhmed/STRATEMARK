@@ -7,13 +7,20 @@
 import { z } from 'zod';
 import { cardTypeSchema, confidenceSchema } from '@mi/contracts';
 
-export const metricOutSchema = z.object({
+const metricEvidenceOutSchema = z.object({
   value: z.number().nullable().default(null),
   confidence: confidenceSchema.default('unknown'),
   /** Index into the grounded citations array; null if not attributable. */
   sourceIndex: z.number().int().nullable().default(null),
   /** One-line "how we got this" note for estimated figures. */
   method: z.string().nullable().default(null),
+  /** Publication/reporting date when the notes provide one. */
+  sourceDate: z.string().nullable().default(null),
+});
+
+export const metricOutSchema = metricEvidenceOutSchema.extend({
+  /** Conflicting sourced values retained so the pipeline can resolve them. */
+  alternatives: z.array(metricEvidenceOutSchema).default([]),
 });
 export type MetricOut = z.infer<typeof metricOutSchema>;
 

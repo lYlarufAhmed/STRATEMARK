@@ -1,5 +1,10 @@
 import express from 'express';
-import { runDeckResearch, createGeminiClient } from '@mi/research';
+import {
+  prepareDeckResearch,
+  runDeckResearchFromStage1,
+  createGeminiClient,
+  type ResearchResult,
+} from '@mi/research';
 import { parseRepoSnapshot } from '@mi/contracts';
 import { config } from './config.js';
 import { scrapeAllSources, scrapeCompany } from './scrapers/index.js';
@@ -25,7 +30,13 @@ import {
 import { sendBatchAlerts } from './lib/email.js';
 import { sendSlackWebhook, sendDiscordWebhook } from './lib/webhook.js';
 import { isDigestTimeForUser } from './lib/digest.js';
-import { createCheckoutSession, createPortalSession, getStripe, PLANS, type PlanTier } from './lib/stripe.js';
+import {
+  createCheckoutSession,
+  createPortalSession,
+  getStripe,
+  PLANS,
+  type PlanTier,
+} from './lib/stripe.js';
 import { authenticateToken, type AuthRequest } from './middleware/auth.js';
 import type { TrackedCompany, User } from './types.js';
 
@@ -222,6 +233,44 @@ app.post('/api/scrape', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // ── Deck Research & Scrape Pipeline ─────────────────────────────────────────
+async function persistResearchResult(userId: string, result: ResearchResult): Promise<void> {
+  await setUserMarket(userId, result.market);
+  await setUserDeck(userId, result.deck);
+  const savedCompanies = new Set<string>();
+  for (const cardWithCompany of result.cards) {
+    await setUserCard(userId, cardWithCompany.card);
+    if (cardWithCompany.company && !savedCompanies.has(cardWithCompany.company.id)) {
+      savedCompanies.add(cardWithCompany.company.id);
+      await setUserCompany(userId, cardWithCompany.company);
+    }
+    for (const metric of cardWithCompany.metrics) await setUserMetric(userId, metric);
+    for (const viceClaim of cardWithCompany.viceClaims) await setUserViceClaim(userId, viceClaim);
+  }
+}
+
+async function scrapeDiscoveredCompanies(userId: string, result: ResearchResult): Promise<void> {
+  const companies = new Map<string, { id: string; name: string; edgarCik?: string | null }>();
+  for (const cardWithCompany of result.cards) {
+    if (!cardWithCompany.company || companies.has(cardWithCompany.company.id)) continue;
+    companies.set(cardWithCompany.company.id, {
+      id: cardWithCompany.company.id,
+      name: cardWithCompany.company.name,
+      edgarCik:
+        (cardWithCompany.company as unknown as { edgarCik?: string | null }).edgarCik ?? null,
+    });
+  }
+  await Promise.all(
+    Array.from(companies.values()).map(async (company) => {
+      const changes = await scrapeCompany(company);
+      if (changes.length === 0) return;
+      const alerts = enforceAlertsProvenance(await classifyChanges(changes), userId).filter(
+        (alert) => alert.confidence !== 'unknown',
+      );
+      for (const alert of alerts) await saveAlert(alert);
+    }),
+  );
+}
+
 app.post('/api/research/deck', authenticateToken, async (req: AuthRequest, res) => {
   const userId = req.userId!;
   const { prompt, region = null, targetCompanies } = req.body ?? {};
@@ -234,101 +283,36 @@ app.post('/api/research/deck', authenticateToken, async (req: AuthRequest, res) 
 
   try {
     const client = createGeminiClient({ apiKey });
-    const discoveredCompanies = new Map<string, { id: string; name: string; edgarCik?: string | null }>();
-
     const options = {
       apiKey,
       ...(targetCompanies ? { targetCompanies: Number(targetCompanies) } : {}),
-      onEvent: (event: unknown) => {
-        const evt = event as { type?: string; card?: { company?: { id?: string; name?: string; edgarCik?: string | null } } };
-        if (evt.type === 'card' && evt.card?.company) {
-          const comp = evt.card.company;
-          if (comp.id && !discoveredCompanies.has(comp.id)) {
-            discoveredCompanies.set(comp.id, {
-              id: comp.id,
-              name: comp.name || '',
-              edgarCik: comp.edgarCik ?? null,
-            });
-          }
-        }
-      },
     };
 
-    const result = await runDeckResearch({ prompt, region }, client, options);
-
-    // Persist all research data (market, deck, cards, companies, metrics, viceClaims) to user's isolated path (users/{userId}/...)
-    if (result.market) {
-      await setUserMarket(userId, result.market);
-    }
-    if (result.deck) {
-      await setUserDeck(userId, result.deck);
-    }
-    if (result.cards) {
-      const savedCompanies = new Set<string>();
-      for (const cardWithCompany of result.cards) {
-        if (cardWithCompany.card) {
-          await setUserCard(userId, cardWithCompany.card);
-        }
-        if (cardWithCompany.company && cardWithCompany.company.id) {
-          if (!savedCompanies.has(cardWithCompany.company.id)) {
-            savedCompanies.add(cardWithCompany.company.id);
-            await setUserCompany(userId, cardWithCompany.company);
-          }
-        }
-        if (Array.isArray(cardWithCompany.metrics)) {
-          for (const metric of cardWithCompany.metrics) {
-            if (metric) {
-              await setUserMetric(userId, metric);
-            }
-          }
-        }
-        if (Array.isArray(cardWithCompany.viceClaims)) {
-          for (const vc of cardWithCompany.viceClaims) {
-            if (vc) {
-              await setUserViceClaim(userId, vc);
-            }
-          }
-        }
-      }
-    }
-
-    // Ensure all companies in result.cards are included in discoveredCompanies for scraping
-    for (const cardWithCompany of result.cards) {
-      if (cardWithCompany.company && cardWithCompany.company.id) {
-        if (!discoveredCompanies.has(cardWithCompany.company.id)) {
-          discoveredCompanies.set(cardWithCompany.company.id, {
-            id: cardWithCompany.company.id,
-            name: cardWithCompany.company.name,
-            edgarCik: (cardWithCompany.company as unknown as { edgarCik?: string | null }).edgarCik ?? null,
-          });
-        }
-      }
-    }
-
-    // Trigger scrapeCompany() on every company discovered and save classified alerts to users/{userId}/alerts/...
-    const scrapedResults = await Promise.all(
-      Array.from(discoveredCompanies.values()).map(async (company) => {
-        const changes = await scrapeCompany(company);
-        if (changes.length > 0) {
-          const classified = await classifyChanges(changes);
-          const alerts = enforceAlertsProvenance(classified, userId);
-          const newAlerts = alerts.filter((a) => a.confidence !== 'unknown');
-          for (const alert of newAlerts) {
-            await saveAlert(alert);
-          }
-        }
-        return { company, changes };
-      }),
-    );
-
-    res.json({
+    const stage = await prepareDeckResearch({ prompt, region }, client, options);
+    await Promise.all([setUserMarket(userId, stage.market), setUserDeck(userId, stage.deck)]);
+    res.status(202).json({
       ok: true,
-      result,
-      scrapedCompanies: scrapedResults,
+      stage: 'discovered',
+      marketPlan: stage.plan,
+      market: stage.market,
+      deck: stage.deck,
+      candidates: stage.candidates,
     });
+
+    void runDeckResearchFromStage1(stage, client, options)
+      .then(async (result) => {
+        await persistResearchResult(userId, result);
+        await scrapeDiscoveredCompanies(userId, result);
+      })
+      .catch((err: unknown) => {
+        console.error(`Background deck enrichment failed for ${stage.deck.id}:`, err);
+      });
   } catch (err) {
     console.error('Deck research failed:', err);
-    res.status(500).json({ error: 'Deck research failed', details: err instanceof Error ? err.message : String(err) });
+    res.status(500).json({
+      error: 'Deck research failed',
+      details: err instanceof Error ? err.message : String(err),
+    });
   }
 });
 
@@ -419,7 +403,8 @@ app.post('/api/v1/brain/import', authenticateToken, async (req: AuthRequest, res
     return res.status(400).json({ error: 'Invalid payload: snapshot object required' });
   }
 
-  const { snapshot, totalItems, validItems, skippedItems, warnings } = parseRepoSnapshot(rawSnapshot);
+  const { snapshot, totalItems, validItems, skippedItems, warnings } =
+    parseRepoSnapshot(rawSnapshot);
 
   if (validItems === 0 && totalItems > 0) {
     return res.status(400).json({

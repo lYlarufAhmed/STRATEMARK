@@ -14,30 +14,60 @@ function fakeClient(): LlmClient {
   const citations = [
     { title: 'techcrunch.com', url: 'https://tc.example/a' },
     { title: 'sec.gov', url: 'https://sec.example/b' },
+    { title: 'reddit.com', url: 'https://reddit.com/r/testing/comments/arr' },
   ];
   return {
-    ground: vi.fn(async () => ({ text: 'grounded notes', citations, queries: ['q'] })),
+    ground: vi.fn(async (prompt: string) => ({ text: prompt, citations, queries: ['q'] })),
     structure: (async (prompt: string, schema: ZodType<unknown>) => {
       let obj: unknown;
       if (prompt.includes('market definition')) {
-        obj = { marketName: 'Test Market', vertical: 'Testing', geography: 'CA', notes: null, searchThemes: ['a', 'b'] };
-      } else if (prompt.includes('"companies"')) {
         obj = {
-          companies: [
-            { name: 'Alpha Inc', domain: 'alpha.com', descriptor: 'big co', cardTypes: ['company'] },
-            { name: 'Beta LLC', domain: 'beta.com', descriptor: 'risky co', cardTypes: ['company', 'vice'] },
-            // The audit's defect, reproduced in shape: discovery hands back a
-            // TOPIC dressed as a company, tagged only as a signal.
-            {
-              name: 'Alpha Inc / Safety / Governance Controversy Entity',
-              domain: null,
-              descriptor: 'governance concerns',
-              cardTypes: ['vice'],
-            },
-            // A REAL business whose newsworthy angle is a controversy. Live data
-            // produced exactly this (Civitai): signal-only tag, real domain.
-            { name: 'Gamma Media', domain: 'gamma.com', descriptor: 'contested platform', cardTypes: ['vice'] },
-          ],
+          marketName: 'Test Market',
+          vertical: 'Testing',
+          geography: 'CA',
+          notes: null,
+          searchThemes: ['a', 'b'],
+        };
+      } else if (prompt.includes('"companies"')) {
+        const fallback = prompt.includes('Fallback search angle');
+        obj = {
+          companies: fallback
+            ? Array.from({ length: 7 }, (_, i) => ({
+                name: `Fallback Company ${i + 1}`,
+                domain: `fallback-${i + 1}.com`,
+                descriptor: 'additional company',
+                cardTypes: ['company'],
+              }))
+            : [
+                {
+                  name: 'Alpha Inc',
+                  domain: 'alpha.com',
+                  descriptor: 'big co',
+                  cardTypes: ['company'],
+                },
+                {
+                  name: 'Beta LLC',
+                  domain: 'beta.com',
+                  descriptor: 'risky co',
+                  cardTypes: ['company', 'vice'],
+                },
+                // The audit's defect, reproduced in shape: discovery hands back a
+                // TOPIC dressed as a company, tagged only as a signal.
+                {
+                  name: 'Alpha Inc / Safety / Governance Controversy Entity',
+                  domain: null,
+                  descriptor: 'governance concerns',
+                  cardTypes: ['vice'],
+                },
+                // A REAL business whose newsworthy angle is a controversy. Live data
+                // produced exactly this (Civitai): signal-only tag, real domain.
+                {
+                  name: 'Gamma Media',
+                  domain: 'gamma.com',
+                  descriptor: 'contested platform',
+                  cardTypes: ['vice'],
+                },
+              ],
         };
       } else if (prompt.includes('Convert the research notes on "Alpha Inc"')) {
         obj = {
@@ -46,10 +76,35 @@ function fakeClient(): LlmClient {
           website: 'https://alpha.com',
           brand: { primary: '#111', secondary: '#222', accent: '#333' },
           metrics: {
-            market_cap: { value: 120_000_000_000, confidence: 'verified', sourceIndex: 1, method: null },
-            arr: { value: 6_000_000_000, confidence: 'verified', sourceIndex: 1, method: null },
+            market_cap: {
+              value: 120_000_000_000,
+              confidence: 'verified',
+              sourceIndex: 1,
+              method: null,
+            },
+            arr: {
+              value: 8_000_000_000,
+              confidence: 'verified',
+              sourceIndex: 2,
+              method: null,
+              sourceDate: '2026-07-01',
+              alternatives: [
+                {
+                  value: 6_000_000_000,
+                  confidence: 'verified',
+                  sourceIndex: 1,
+                  method: null,
+                  sourceDate: '2026-06-01',
+                },
+              ],
+            },
             employees: { value: 60_000, confidence: 'verified', sourceIndex: 0, method: null },
-            users: { value: 40_000_000, confidence: 'estimated', sourceIndex: 0, method: 'app installs' },
+            users: {
+              value: 40_000_000,
+              confidence: 'estimated',
+              sourceIndex: 0,
+              method: 'app installs',
+            },
             market_share: { value: 45, confidence: 'verified', sourceIndex: 0, method: null },
           },
           viceClaims: [],
@@ -62,7 +117,12 @@ function fakeClient(): LlmClient {
           website: 'https://gamma.com',
           brand: null,
           metrics: {
-            valuation: { value: 40_000_000, confidence: 'estimated', sourceIndex: 0, method: 'press reports' },
+            valuation: {
+              value: 40_000_000,
+              confidence: 'estimated',
+              sourceIndex: 0,
+              method: 'press reports',
+            },
             employees: { value: 30, confidence: 'verified', sourceIndex: 0, method: null },
           },
           viceClaims: [{ text: 'Named in a 2026 copyright suit', sourceIndex: 0 }],
@@ -75,7 +135,12 @@ function fakeClient(): LlmClient {
           website: 'https://beta.com',
           brand: null,
           metrics: {
-            valuation: { value: 8_000_000, confidence: 'estimated', sourceIndex: 0, method: 'seed round' },
+            valuation: {
+              value: 8_000_000,
+              confidence: 'estimated',
+              sourceIndex: 0,
+              method: 'seed round',
+            },
             arr: { value: 400_000, confidence: 'estimated', sourceIndex: 0, method: 'proxy' },
             employees: { value: 12, confidence: 'verified', sourceIndex: 0, method: null },
             users: { value: 1_000, confidence: 'estimated', sourceIndex: 0, method: 'followers' },
@@ -88,8 +153,16 @@ function fakeClient(): LlmClient {
         };
       } else if (prompt.includes('"barriers"')) {
         obj = {
-          barriers: [{ title: 'Capital intensity', summary: 'Expensive to enter.', sourceIndex: 0 }],
-          insights: [{ title: 'Margins are shifting', summary: 'Compute costs falling fast.', sourceIndex: 1 }],
+          barriers: [
+            { title: 'Capital intensity', summary: 'Expensive to enter.', sourceIndex: 0 },
+          ],
+          insights: [
+            {
+              title: 'Margins are shifting',
+              summary: 'Compute costs falling fast.',
+              sourceIndex: 1,
+            },
+          ],
         };
       } else if (prompt.includes('"markdown"')) {
         obj = { markdown: '# Overview\n\n## What they do\nStuff.\n\n## Why it matters\nReasons.' };
@@ -117,7 +190,7 @@ describe('runDeckResearch (full orchestration, fake LLM)', () => {
     // Alpha, Beta, and Gamma Media (promoted from a signal-only tag because it
     // has a real domain). The pseudo-entity with no domain is not among them.
     const companyCards = result.cards.filter((c) => c.card.cardType === 'company');
-    expect(companyCards).toHaveLength(3);
+    expect(companyCards).toHaveLength(10);
 
     // Alpha should score as a top-tier titan; Beta near the bottom.
     const alpha = companyCards.find((c) => c.company?.name === 'Alpha Inc')!;
@@ -128,6 +201,11 @@ describe('runDeckResearch (full orchestration, fake LLM)', () => {
     // Metrics carry citation URLs from grounding.
     const cap = alpha.metrics.find((m) => m.metricType === 'market_cap');
     expect(cap?.source).toBe('https://sec.example/b');
+    const arr = alpha.metrics.find((m) => m.metricType === 'arr');
+    expect(arr?.value).toBe(6_000_000_000);
+    expect(arr?.confidence).toBe('verified');
+    expect(arr?.source).toBe('https://sec.example/b');
+    expect(arr?.methodNote).toMatch(/conflicting sourced value/i);
 
     // Logos resolved from the domain.
     expect(alpha.company?.logoUrl).toContain('faviconV2');
@@ -265,7 +343,10 @@ describe('GeminiRepository (fake client + in-memory store)', () => {
 
   it('fact-checks a claim with a grounded verdict + citations', async () => {
     const repo = new GeminiRepository({ apiKey: 'x', client: fakeClient(), store: memStore() });
-    const result = await repo.factCheck({ claim: 'Alpha Inc market cap is $120B', companyName: 'Alpha Inc' });
+    const result = await repo.factCheck({
+      claim: 'Alpha Inc market cap is $120B',
+      companyName: 'Alpha Inc',
+    });
     expect(result.verdict).toBe('supported');
     expect(result.rationale).toContain('filings');
     expect(result.citations.length).toBeGreaterThan(0);
@@ -278,10 +359,10 @@ describe('GeminiRepository (fake client + in-memory store)', () => {
     const report = await repo.generateReport({ kind: 'deck', subjectId: deck.id });
     expect(report.title).toContain('Market Report');
     expect(report.citations.length).toBeGreaterThan(0);
-    expect((await repo.listReports())).toHaveLength(1);
+    expect(await repo.listReports()).toHaveLength(1);
     expect((await repo.getReport(report.id))?.id).toBe(report.id);
     // Survives a restart (persisted through the store).
     const repo2 = new GeminiRepository({ apiKey: 'x', client: fakeClient(), store });
-    expect((await repo2.listReports())).toHaveLength(1);
+    expect(await repo2.listReports()).toHaveLength(1);
   });
 });

@@ -30,7 +30,7 @@ export const GROUNDED_SYSTEM =
  * one thing this product promises never to do.
  */
 export const CHAT_SYSTEM =
-  'You are the research copilot inside a competitive-intelligence deck. Answer using ONLY two sources: (1) the DECK DATA provided in the prompt — this deck\'s prior grounded research, whose confidence tags (verified / estimated / unknown) you must respect and repeat honestly — and (2) fresh Google Search results retrieved for this question. NEVER answer from prior or training knowledge: if neither the deck data nor the search results support a claim, say plainly that it is not established. Be direct and analytical, compare entities when asked, keep answers tight (a few short paragraphs or a list), and attribute figures to their source. You are talking to a sharp analyst — no filler, no hedging beyond what the evidence requires.';
+  "You are the research copilot inside a competitive-intelligence deck. Answer using ONLY two sources: (1) the DECK DATA provided in the prompt — this deck's prior grounded research, whose confidence tags (verified / estimated / unknown) you must respect and repeat honestly — and (2) fresh Google Search results retrieved for this question. NEVER answer from prior or training knowledge: if neither the deck data nor the search results support a claim, say plainly that it is not established. Be direct and analytical, compare entities when asked, keep answers tight (a few short paragraphs or a list), and attribute figures to their source. You are talking to a sharp analyst — no filler, no hedging beyond what the evidence requires.";
 
 export const STRUCTURE_SYSTEM =
   'You convert researched notes into strict JSON. Output ONLY JSON — no prose, no code fences. Never invent values: if the notes do not support a field, use null and confidence "unknown". Use confidence "verified" only when a cited source states the figure directly, "estimated" when derived via a stated method, otherwise "unknown".';
@@ -64,6 +64,15 @@ export function discoverPrompt(plan: MarketPlan, target: number): string {
     `Using Google Search, identify the REAL companies in this market. Find roughly ${target} operating companies spanning maturity from tiny startups to dominant incumbents, and make sure the set includes the infrastructure/tooling providers the market depends on and the distribution/channel players it sells through. Note any documented controversy or notable community signal attached to a company you already list. For each entity give its name, website root domain, a one-line descriptor, and the role(s) it plays: ${DISCOVERABLE_ROLES.map((r) => CARD_TYPE_LABELS[r]).join(', ')}. Only include entities you can actually find in search results.`,
     ``,
     `STRICT: include only actual operating companies/organizations. Government agencies, regulators, trade associations, events, and abstract concepts or debates are NOT companies — omit them entirely (do not force them into any category).`,
+  ].join('\n');
+}
+
+export function fallbackDiscoverPrompt(plan: MarketPlan, theme: string, needed: number): string {
+  return [
+    `Market: ${plan.marketName} — ${plan.vertical}${plan.geography ? ` in ${plan.geography}` : ''}.`,
+    `Fallback search angle: ${theme}.`,
+    `Using Google Search, find at least ${needed} additional REAL operating companies in this market, including smaller, regional, adjacent, infrastructure, and distribution businesses that a broad search may miss.`,
+    `Return names, root domains, descriptors, and roles. Do not include agencies, regulators, trade bodies, events, or concepts. Only include entities supported by the search results.`,
   ].join('\n');
 }
 
@@ -123,16 +132,20 @@ export function enrichPrompt(candidate: CompanyCandidate, plan: MarketPlan): str
     .join('\n');
 }
 
-export function structureEnrichPrompt(candidate: CompanyCandidate, groundedText: string, citations: Citation[]): string {
+export function structureEnrichPrompt(
+  candidate: CompanyCandidate,
+  groundedText: string,
+  citations: Citation[],
+): string {
   const sources = citations.map((c, i) => `[${i}] ${c.title} — ${c.url}`).join('\n') || '(none)';
   return [
     `Convert the research notes on "${candidate.name}" into JSON with this shape:`,
     `{ "oneLiner", "hqLocation"|null, "website"|null, "brand": {"primary","secondary","accent"}|null,`,
     `  "metrics": { "market_share"?, "valuation"?, "market_cap"?, "arr"?, "users"?, "employees"? } where each is`,
-    `     { "value": number|null (raw number — dollars for money, count for users/employees, percent for share), "confidence": "verified"|"estimated"|"unknown", "sourceIndex": number|null (index into SOURCES), "method": string|null },`,
+    `     { "value": number|null (raw number — dollars for money, count for users/employees, percent for share), "confidence": "verified"|"estimated"|"unknown", "sourceIndex": number|null (index into SOURCES), "method": string|null, "sourceDate": ISO date|string|null, "alternatives": [same fields except alternatives] },`,
     `  "viceClaims": [ { "text", "sourceIndex": number|null } ], "cultureNote": string|null }`,
     ``,
-    `Rules: use "verified" only if a SOURCE states the figure; "estimated" with a "method" note if derived; else "unknown" with value null. Every viceClaim MUST have a sourceIndex. Provide only valuation OR market_cap, not both.`,
+    `Rules: use "verified" only if a SOURCE states the figure; "estimated" with a "method" note if derived; else "unknown" with value null. Preserve materially conflicting sourced ARR, valuation, market-cap, user, employee, or share figures in "alternatives" with their own sourceIndex and sourceDate; do not average them. Every viceClaim MUST have a sourceIndex. Provide only valuation OR market_cap, not both.`,
     ``,
     `SOURCES:`,
     sources,
@@ -161,7 +174,10 @@ export function tierReviewBatchPrompt(
     `Return JSON: { "reviews": [ { "name": string (copy it EXACTLY as given), "nudge": -1|0|1, "reason": string|null (one sentence) } ] }. Include every company exactly once.`,
     ``,
     `COHORT:`,
-    ...rows.map((r) => `- ${r.name} | base tier ${r.baseTier} (${TIER_LABELS[r.baseTier as 1]}) | ${r.evidence || 'no metrics found'}`),
+    ...rows.map(
+      (r) =>
+        `- ${r.name} | base tier ${r.baseTier} (${TIER_LABELS[r.baseTier as 1]}) | ${r.evidence || 'no metrics found'}`,
+    ),
   ].join('\n');
 }
 

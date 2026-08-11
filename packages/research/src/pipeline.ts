@@ -41,6 +41,7 @@ import {
   STRUCTURE_SYSTEM,
   discoverPrompt,
   enrichPrompt,
+  fallbackDiscoverPrompt,
   interpretMarketPrompt,
   structureDiscoveryPrompt,
   structureEnrichPrompt,
@@ -63,6 +64,13 @@ export interface ResearchResult {
   market: Market;
   deck: Deck;
   cards: CardWithCompany[];
+}
+
+export interface ResearchStage1 {
+  plan: MarketPlan;
+  market: Market;
+  deck: Deck;
+  candidates: CompanyCandidate[];
 }
 
 const uid = (prefix: string, slug: string): string =>
@@ -99,23 +107,81 @@ function metricRows(
   enrich: EnrichmentOut,
   citations: Citation[],
   companyId: string,
+  officialDomain: string | null,
 ): CompanyMetric[] {
   const rows: CompanyMetric[] = [];
   const cited = (idx: number | null | undefined): Citation[] =>
     idx != null && citations[idx] ? [citations[idx]!] : [];
+  const credibility = (
+    citation: Citation | undefined,
+  ): Extract<CompanyMetric['confidence'], 'verified' | 'estimated'> | null => {
+    if (!citation?.url) return null;
+    let host = '';
+    try {
+      host = new URL(citation.url).hostname.toLowerCase().replace(/^www\./, '');
+    } catch {
+      return null;
+    }
+    const official = officialDomain
+      ? host === officialDomain || host.endsWith(`.${officialDomain}`)
+      : false;
+    const url = citation.url.toLowerCase();
+    if (official || /(sec\.gov|edgar|bloomberg|reuters|pacer)/.test(url)) {
+      return 'verified';
+    }
+    if (
+      /(^|\.)(reddit\.com|twitter\.com|x\.com)$/.test(host) ||
+      /(^|\.)(blog|blogs|forum|forums)\./.test(host) ||
+      /\/(blog|forum|forums)(\/|$)/.test(url)
+    ) {
+      return 'estimated';
+    }
+    return null;
+  };
+  const confidenceRank: Record<CompanyMetric['confidence'], number> = {
+    user_verified: 3,
+    verified: 2,
+    estimated: 1,
+    unknown: 0,
+  };
+  const sourceTime = (value: string | null | undefined): number => {
+    const parsed = value ? Date.parse(value) : Number.NaN;
+    return Number.isNaN(parsed) ? 0 : parsed;
+  };
+
   for (const [type, m] of Object.entries(enrich.metrics ?? {})) {
     if (!m) continue;
-    const attached = cited(m.sourceIndex);
+    const evidence = [m, ...(m.alternatives ?? [])].map((item) => {
+      const attached = cited(item.sourceIndex);
+      const classified = credibility(attached[0]);
+      return {
+        item,
+        attached,
+        confidence: classified ?? item.confidence ?? 'unknown',
+        sourceTime: sourceTime(item.sourceDate),
+      };
+    });
+    evidence.sort(
+      (a, b) =>
+        confidenceRank[b.confidence] - confidenceRank[a.confidence] || b.sourceTime - a.sourceTime,
+    );
+    const selected = evidence[0]!;
+    const conflicts = evidence.filter(
+      (entry) => entry.item.value != null && entry.item.value !== selected.item.value,
+    );
+    const conflictNote = conflicts.length
+      ? `Resolved ${conflicts.length} conflicting sourced value${conflicts.length === 1 ? '' : 's'} by confidence and recency.`
+      : null;
     rows.push({
       id: uid('met', `${companyId}-${type}`),
       companyId,
       metricType: type as MetricType,
-      value: m.value ?? null,
-      confidence: m.confidence ?? 'unknown',
-      source: attached[0]?.url ?? null,
-      citations: attached,
-      methodNote: m.method ?? null,
-      capturedAt: now(),
+      value: selected.item.value ?? null,
+      confidence: selected.confidence,
+      source: selected.attached[0]?.url ?? null,
+      citations: selected.attached,
+      methodNote: [selected.item.method, conflictNote].filter(Boolean).join(' ') || null,
+      capturedAt: selected.sourceTime ? new Date(selected.sourceTime).toISOString() : now(),
     });
   }
   // The model may claim "verified" while pointing at nothing. Provenance rules
@@ -160,61 +226,99 @@ async function discover(
   target: number,
   signal?: AbortSignal,
 ): Promise<{ candidates: CompanyCandidate[]; rejected: string[] }> {
-  const grounded = await client.ground(discoverPrompt(plan, target), {
-    system: GROUNDED_SYSTEM,
-    signal,
-  });
-  const out = await client.structure(structureDiscoveryPrompt(grounded.text), discoveryOutSchema, {
-    system: STRUCTURE_SYSTEM,
-    signal,
-  });
+  const minimum = Math.max(10, target);
   // Dedupe by name, then enforce the entity rule below.
   const seen = new Set<string>();
   const candidates: CompanyCandidate[] = [];
   const rejected: string[] = [];
-  for (const c of out.companies ?? []) {
-    const key = c.name.trim().toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-    const rawTypes = (c.cardTypes ?? []) as CardType[];
-    // Barriers are market-level and researched in their own pass; they are never
-    // a company facet.
-    const cardTypes = rawTypes.filter((t) => t !== 'barrier');
-    const domain = rootDomain(c.domain);
+  const merge = (
+    companies: Array<{
+      name: string;
+      domain: string | null;
+      descriptor: string;
+      cardTypes: CardType[];
+    }>,
+  ) => {
+    for (const c of companies) {
+      const key = c.name.trim().toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const rawTypes = (c.cardTypes ?? []) as CardType[];
+      // Barriers are market-level and researched in their own pass; they are never
+      // a company facet.
+      const cardTypes = rawTypes.filter((t) => t !== 'barrier');
+      const domain = rootDomain(c.domain);
 
-    // THE ENTITY RULE. Card types are *facets of a business*, not things in
-    // their own right. A candidate tagged only with signals (vice / culture /
-    // insight) is suspect: discovery may have handed us a topic dressed as a
-    // company. Enriching one mints a pseudo-company that then inherits a real
-    // company's figures with no evidence — the
-    // "OpenAI / Safety / Governance Controversy Entity" defect in audit 1.2.
-    //
-    // But "controversial" and "not a company" are different things, and the
-    // first version of this rule conflated them: on live data it threw away
-    // Civitai, a real business whose newsworthy angle happens to be a
-    // controversy. A resolvable domain is concrete evidence of an operating
-    // entity, so treat a signal-only tag on something with a real web presence
-    // as a MIS-TAG and promote it. With no domain and no entity facet, there is
-    // nothing to stand a company card on — reject before it costs a grounded call.
-    //
-    // Either way a real company's own controversies still produce a Vice card:
-    // those come from the company's own enrichment, where the evidence lives.
-    let facets = cardTypes;
-    if (facets.length > 0 && !facets.some(isEntityCardType)) {
-      if (!domain) {
-        rejected.push(c.name.trim());
-        continue;
+      // THE ENTITY RULE. Card types are *facets of a business*, not things in
+      // their own right. A candidate tagged only with signals (vice / culture /
+      // insight) is suspect: discovery may have handed us a topic dressed as a
+      // company. Enriching one mints a pseudo-company that then inherits a real
+      // company's figures with no evidence — the
+      // "OpenAI / Safety / Governance Controversy Entity" defect in audit 1.2.
+      //
+      // But "controversial" and "not a company" are different things, and the
+      // first version of this rule conflated them: on live data it threw away
+      // Civitai, a real business whose newsworthy angle happens to be a
+      // controversy. A resolvable domain is concrete evidence of an operating
+      // entity, so treat a signal-only tag on something with a real web presence
+      // as a MIS-TAG and promote it. With no domain and no entity facet, there is
+      // nothing to stand a company card on — reject before it costs a grounded call.
+      //
+      // Either way a real company's own controversies still produce a Vice card:
+      // those come from the company's own enrichment, where the evidence lives.
+      let facets = cardTypes;
+      if (facets.length > 0 && !facets.some(isEntityCardType)) {
+        if (!domain) {
+          rejected.push(c.name.trim());
+          continue;
+        }
+        facets = ['company', ...facets];
       }
-      facets = ['company', ...facets];
-    }
 
-    candidates.push({
-      name: c.name.trim(),
-      domain,
-      descriptor: c.descriptor ?? '',
-      // An untyped candidate is assumed to be a plain company.
-      cardTypes: facets.length ? facets : ['company'],
-    });
+      candidates.push({
+        name: c.name.trim(),
+        domain,
+        descriptor: c.descriptor ?? '',
+        // An untyped candidate is assumed to be a plain company.
+        cardTypes: facets.length ? facets : ['company'],
+      });
+    }
+  };
+
+  const runPass = async (prompt: string): Promise<void> => {
+    const grounded = await client.ground(prompt, { system: GROUNDED_SYSTEM, signal });
+    const out = await client.structure(
+      structureDiscoveryPrompt(grounded.text),
+      discoveryOutSchema,
+      {
+        system: STRUCTURE_SYSTEM,
+        signal,
+      },
+    );
+    merge(
+      (out.companies ?? []) as Array<{
+        name: string;
+        domain: string | null;
+        descriptor: string;
+        cardTypes: CardType[];
+      }>,
+    );
+  };
+
+  await runPass(discoverPrompt(plan, minimum));
+  const fallbackThemes = [
+    ...plan.searchThemes,
+    `${plan.vertical} companies ${plan.geography ?? 'globally'}`,
+    `${plan.marketName} startups incumbents suppliers platforms`,
+  ];
+  for (const theme of fallbackThemes) {
+    if (candidates.length >= minimum) break;
+    await runPass(fallbackDiscoverPrompt(plan, theme, minimum - candidates.length));
+  }
+  if (candidates.length < minimum) {
+    throw new Error(
+      `Discovery found only ${candidates.length} unique operating companies after fallback searches; at least ${minimum} are required.`,
+    );
   }
   return { candidates, rejected };
 }
@@ -247,7 +351,13 @@ async function enrichOne(
     websiteUrl: website,
     brandTheme: brandFrom(enrich.brand ?? null),
   };
-  return { candidate, company, metrics: metricRows(enrich, grounded.citations, companyId), enrich, citations: grounded.citations };
+  return {
+    candidate,
+    company,
+    metrics: metricRows(enrich, grounded.citations, companyId, domain),
+    enrich,
+    citations: grounded.citations,
+  };
 }
 
 /**
@@ -418,16 +528,20 @@ export async function expandDeckResearch(args: {
     discoveryOutSchema,
     { system: STRUCTURE_SYSTEM, signal: args.signal },
   );
-  const known = new Set(args.excludeNames.map((n) => n.toLowerCase()));
-  const candidates: CompanyCandidate[] = (out.companies ?? [])
-    .filter((c) => !known.has(c.name.trim().toLowerCase()))
-    .slice(0, args.target ?? 3)
-    .map((c) => ({
+  const known = new Set(args.excludeNames.map((n) => n.trim().toLowerCase()));
+  const candidates: CompanyCandidate[] = [];
+  for (const c of out.companies ?? []) {
+    const key = c.name.trim().toLowerCase();
+    if (!key || known.has(key)) continue;
+    known.add(key);
+    candidates.push({
       name: c.name.trim(),
       domain: rootDomain(c.domain),
       descriptor: c.descriptor ?? '',
       cardTypes: ['company'],
-    }));
+    });
+    if (candidates.length >= (args.target ?? 3)) break;
+  }
   emit({ type: 'candidates', candidates });
 
   const cards: CardWithCompany[] = [];
@@ -439,7 +553,13 @@ export async function expandDeckResearch(args: {
     let tier: MaturityTier | null = base.finalTier;
     let tierReason: string | null = null;
     if (base.finalTier != null) {
-      const review = await reviewTier(args.client, e.company.name, base.finalTier, e.metrics, args.signal);
+      const review = await reviewTier(
+        args.client,
+        e.company.name,
+        base.finalTier,
+        e.metrics,
+        args.signal,
+      );
       tier = computeCms(
         buildCmsInput(e.metrics),
         { deckUserValues: args.deckUserValues },
@@ -467,44 +587,32 @@ export async function expandDeckResearch(args: {
   return cards;
 }
 
-/** Run the full deck-research pipeline. Streams progress via `onEvent`. */
-export async function runDeckResearch(
+export async function prepareDeckResearch(
   brief: { prompt: string; region: string | null },
   client: LlmClient,
-  options: RunResearchOptions,
-): Promise<ResearchResult> {
+  options: Pick<RunResearchOptions, 'targetCompanies' | 'onEvent' | 'signal'> = {},
+): Promise<ResearchStage1> {
   const emit: OnResearchEvent = options.onEvent ?? (() => {});
-  const signal = options.signal;
-  const target = options.targetCompanies ?? 12;
-  const concurrency = options.concurrency ?? 2;
-
+  const target = Math.max(10, options.targetCompanies ?? 10);
   emit({ type: 'status', step: 'interpret', message: 'Understanding the market…' });
-  const plan = await interpret(client, brief, signal);
+  const plan = await interpret(client, brief, options.signal);
   emit({ type: 'market', market: plan });
-
   emit({ type: 'status', step: 'discover', message: 'Discovering companies via grounded search…' });
-  const { candidates: discovered, rejected } = await discover(client, plan, target, signal);
-  // Say so out loud when discovery hands back a topic dressed as a company. This
-  // used to pass silently and mint a pseudo-company (audit Finding 1.2).
+  const { candidates, rejected } = await discover(client, plan, target, options.signal);
   if (rejected.length > 0) {
     emit({
       type: 'warning',
       message: `Skipped ${rejected.length} result${rejected.length === 1 ? '' : 's'} that ${rejected.length === 1 ? 'was' : 'were'} a topic rather than a company: ${rejected.join(', ')}.`,
     });
   }
-  // Discovery routinely over-returns (measured: 17 candidates for a target of 8),
-  // and every extra candidate costs a grounded enrichment call — the scarcest
-  // free-tier resource. Cap to the target, keeping company cards first so the
-  // deck's backbone survives the trim.
-  const candidates =
-    discovered.length > target
+  const capped =
+    candidates.length > target
       ? [
-          ...discovered.filter((c) => c.cardTypes.includes('company')),
-          ...discovered.filter((c) => !c.cardTypes.includes('company')),
+          ...candidates.filter((c) => c.cardTypes.includes('company')),
+          ...candidates.filter((c) => !c.cardTypes.includes('company')),
         ].slice(0, target)
-      : discovered;
-  emit({ type: 'candidates', candidates });
-
+      : candidates;
+  emit({ type: 'candidates', candidates: capped });
   const marketSlug = slugify(plan.marketName);
   const market: Market = {
     id: uid('mkt', marketSlug),
@@ -519,15 +627,26 @@ export async function runDeckResearch(
     createdAt: now(),
     lastRefreshedAt: now(),
   };
+  return { plan, market, deck, candidates: capped };
+}
 
-  // Enrich (fan-out, concurrency-gated). Progress reported per company.
+async function enrichPreparedDeck(
+  stage: ResearchStage1,
+  client: LlmClient,
+  options: RunResearchOptions,
+): Promise<ResearchResult> {
+  const emit: OnResearchEvent = options.onEvent ?? (() => {});
+  const signal = options.signal;
+  const candidates = stage.candidates;
+  const concurrency = options.concurrency ?? 2;
+
   let done = 0;
   const enriched = await mapWithConcurrency(
     candidates,
     concurrency,
     async (candidate) => {
       throwIfAborted(signal);
-      const result = await enrichOne(client, candidate, plan, signal);
+      const result = await enrichOne(client, candidate, stage.plan, signal);
       done += 1;
       emit({
         type: 'status',
@@ -540,15 +659,11 @@ export async function runDeckResearch(
     signal,
   );
 
-  // Score: relative user values need the whole deck first.
   const deckUserValues = enriched
     .filter((e) => e.candidate.cardTypes.some(isEntityCardType))
     .flatMap((e) => e.metrics)
     .filter((m) => m.metricType === 'users' && m.confidence !== 'unknown' && m.value !== null)
     .map((m) => m.value as number);
-
-  // Resolve logos ONCE here rather than probing per card at render time (audit
-  // findings 2.2 / 3.1 / 3.3). Free, keyless, paced, and prefers vector art.
   emit({ type: 'status', step: 'score', message: 'Resolving company logos…' });
   await mapWithConcurrency(enriched, 2, async (e) => {
     const domain = rootDomain(e.company.websiteUrl) ?? e.candidate.domain;
@@ -556,15 +671,10 @@ export async function runDeckResearch(
     if (logo.url) e.company.logoUrl = logo.url;
     return null;
   });
-
   emit({ type: 'status', step: 'score', message: 'Scoring maturity tiers…' });
-
-  // Deterministic base tiers first, then ONE cohort-wide review pass.
   const baseTiers = new Map<string, MaturityTier>();
   const reviewRows: { name: string; baseTier: MaturityTier; evidence: string }[] = [];
   for (const e of enriched) {
-    // Any company with an entity facet gets a maturity tier — a business whose
-    // primary role is "infrastructure" still has a size and a stage.
     if (!e.candidate.cardTypes.some(isEntityCardType)) continue;
     const base = computeCms(buildCmsInput(e.metrics), { deckUserValues });
     if (base.finalTier == null) continue;
@@ -577,66 +687,49 @@ export async function runDeckResearch(
         .join('; '),
     });
   }
-  const reviews = await reviewTiersBatch(client, plan.marketName, reviewRows, signal);
-
+  const reviews = await reviewTiersBatch(client, stage.plan.marketName, reviewRows, signal);
   const cards: CardWithCompany[] = [];
   for (const e of enriched) {
     let tier: MaturityTier | null = null;
     let tierReason: string | null = null;
     if (e.candidate.cardTypes.some(isEntityCardType) && baseTiers.has(e.company.id)) {
       const review = reviews.get(e.company.name) ?? { nudge: 0 as const, reason: null };
-      const scored = computeCms(buildCmsInput(e.metrics), { deckUserValues }, { nudge: review.nudge });
-      tier = scored.finalTier;
+      tier = computeCms(
+        buildCmsInput(e.metrics),
+        { deckUserValues },
+        { nudge: review.nudge },
+      ).finalTier;
       tierReason = review.reason;
     }
-    // Every sourced controversy this company actually has. Computed once, because
-    // it decides whether a Vice card is worth minting at all.
     const sourcedViceClaims: ViceClaim[] = e.enrich.viceClaims
       .map((vc, i) => {
         const cite = vc.sourceIndex != null ? e.citations[vc.sourceIndex] : undefined;
-        if (!cite?.url) return null; // grounding discipline: drop unsourced vice claims
-        return {
-          id: uid('vcl', `${e.company.id}-${i}`),
-          cardId: '',
-          claimText: vc.text,
-          sourceUrl: cite.url,
-          sourceTitle: cite.title || null,
-          capturedAt: now(),
-        };
+        return cite?.url
+          ? {
+              id: uid('vcl', `${e.company.id}-${i}`),
+              cardId: '',
+              claimText: vc.text,
+              sourceUrl: cite.url,
+              sourceTitle: cite.title || null,
+              capturedAt: now(),
+            }
+          : null;
       })
       .filter((x): x is ViceClaim => x !== null);
     const cultureNote = (e.enrich.cultureNote ?? '').trim();
-
-    // ONE entity card per company, plus a signal card only where a signal exists.
-    //
-    // Discovery legitimately reports several roles for one business — OpenAI sells
-    // models, rents inference, and distributes through a hyperscaler. But minting
-    // a card per role printed the SAME four figures three times under three
-    // headings, which is the duplication the entity rule was written to stop, and
-    // it padded a 17-card deck to 47. The deck is "one card per company"; the
-    // company's other roles are a property of that card, not extra cards.
-    //
-    // Signal facets are then emitted only when they carry content. A Vice card
-    // with no sourced claim, or a Culture card with no note, is an empty promise —
-    // measured on a live run: 10 of 10 companies were tagged culture or vice, and
-    // every one of those cards came back with nothing in it.
-    // Discovery is asked for exactly one role, so this is a tiebreak. Prefer the
-    // more specific supplier roles: "company" is the label a model reaches for by
-    // default, and letting it win would leave the Infrastructure and Distribution
-    // views permanently empty.
     const primaryEntity =
       (['infrastructure', 'distribution', 'company'] as const).find((t) =>
         e.candidate.cardTypes.includes(t),
       ) ?? 'company';
     const emitted: CardType[] = [primaryEntity];
-    if (e.candidate.cardTypes.includes('vice') && sourcedViceClaims.length > 0) emitted.push('vice');
-    if (e.candidate.cardTypes.includes('culture') && cultureNote.length > 0) emitted.push('culture');
-
+    if (e.candidate.cardTypes.includes('vice') && sourcedViceClaims.length > 0)
+      emitted.push('vice');
+    if (e.candidate.cardTypes.includes('culture') && cultureNote.length > 0)
+      emitted.push('culture');
     for (const cardType of emitted) {
-      const viceClaims: ViceClaim[] = cardType === 'vice' ? sourcedViceClaims : [];
       const card: Card = {
         id: uid('crd', `${slugify(e.company.name)}-${cardType}`),
-        deckId: deck.id,
+        deckId: stage.deck.id,
         companyId: e.company.id,
         cardType,
         title: null,
@@ -647,32 +740,45 @@ export async function runDeckResearch(
         keyPoints: [],
         createdAt: now(),
       };
-      const stampedClaims = viceClaims.map((v) => ({ ...v, cardId: card.id }));
+      const viceClaims =
+        cardType === 'vice' ? sourcedViceClaims.map((v) => ({ ...v, cardId: card.id })) : [];
       const cwc: CardWithCompany = {
         card,
         company: e.company,
-        // Only a card that IS the business carries the business's figures. A
-        // signal card states a sourced claim; lending it a valuation would show
-        // the same number twice under two different provenance stories.
         metrics: isEntityCardType(cardType) ? e.metrics : [],
-        viceClaims: stampedClaims,
+        viceClaims,
       };
       cards.push(cwc);
       emit({ type: 'card', card: cwc });
     }
   }
-
   emit({ type: 'status', step: 'barriers', message: 'Identifying barriers and market insights…' });
   try {
-    const marketCards = await researchMarketCards(client, plan, deck.id, signal);
-    for (const b of marketCards) {
-      cards.push(b);
-      emit({ type: 'card', card: b });
+    for (const card of await researchMarketCards(client, stage.plan, stage.deck.id, signal)) {
+      cards.push(card);
+      emit({ type: 'card', card });
     }
   } catch {
     emit({ type: 'warning', message: 'Could not research market-level barriers and insights.' });
   }
-
   emit({ type: 'done', total: cards.length });
-  return { market, deck, cards };
+  return { market: stage.market, deck: stage.deck, cards };
+}
+
+export async function runDeckResearchFromStage1(
+  stage: ResearchStage1,
+  client: LlmClient,
+  options: RunResearchOptions,
+): Promise<ResearchResult> {
+  return enrichPreparedDeck(stage, client, options);
+}
+
+/** Run the full deck-research pipeline. Streams progress via `onEvent`. */
+export async function runDeckResearch(
+  brief: { prompt: string; region: string | null },
+  client: LlmClient,
+  options: RunResearchOptions,
+): Promise<ResearchResult> {
+  const stage = await prepareDeckResearch(brief, client, options);
+  return enrichPreparedDeck(stage, client, options);
 }

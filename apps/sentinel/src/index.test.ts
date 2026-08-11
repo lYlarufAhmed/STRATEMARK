@@ -110,81 +110,94 @@ vi.mock('firebase-admin/auth', () => ({
 
 vi.mock('@mi/research', () => ({
   createGeminiClient: vi.fn().mockReturnValue({}),
-  runDeckResearch: vi.fn().mockImplementation(async (input, _client, options) => {
-    if (options?.onEvent) {
-      options.onEvent({
-        type: 'card',
-        card: { company: { id: 'comp_disc_1', name: 'Discovered Corp', edgarCik: '000999888' } },
-      });
-    }
-    return {
-      market: {
-        id: 'mkt_1',
-        name: 'Competitive Intel',
-        scopeDefinition: { include: [], exclude: [], geography: input.region ?? 'Global' },
-        refreshCadence: 'weekly',
-        createdAt: '2026-01-01T00:00:00.000Z',
-      },
-      deck: {
-        id: 'deck_1',
-        marketId: 'mkt_1',
-        createdAt: '2026-01-01T00:00:00.000Z',
-        lastRefreshedAt: null,
-      },
-      cards: [
-        {
-          card: {
-            id: 'card_1',
-            deckId: 'deck_1',
-            cardType: 'company',
-            title: 'Card 1',
-            summary: 'Summary 1',
+  prepareDeckResearch: vi.fn().mockImplementation(async (input) => ({
+    plan: {
+      marketName: 'Competitive Intel',
+      vertical: 'AI',
+      geography: input.region ?? 'Global',
+      notes: null,
+      searchThemes: ['startups'],
+    },
+    market: {
+      id: 'mkt_1',
+      name: 'Competitive Intel',
+      scopeDefinition: { include: [], exclude: [], geography: input.region ?? 'Global' },
+      refreshCadence: 'weekly',
+      createdAt: '2026-01-01T00:00:00.000Z',
+    },
+    deck: {
+      id: 'deck_1',
+      marketId: 'mkt_1',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      lastRefreshedAt: null,
+    },
+    candidates: Array.from({ length: 10 }, (_, i) => ({
+      name: `Candidate ${i + 1}`,
+      domain: `candidate-${i + 1}.com`,
+      descriptor: 'AI company',
+      cardTypes: ['company'],
+    })),
+  })),
+  runDeckResearchFromStage1: vi.fn().mockImplementation(async (stage) => ({
+    market: {
+      ...stage.market,
+    },
+    deck: {
+      ...stage.deck,
+    },
+    cards: [
+      {
+        card: {
+          id: 'card_1',
+          deckId: 'deck_1',
+          cardType: 'company',
+          title: 'Card 1',
+          summary: 'Summary 1',
+          confidence: 'sourced-primary',
+          citations: [],
+          updatedAt: '2026-01-01T00:00:00.000Z',
+        },
+        company: {
+          id: 'comp_1',
+          name: 'Target Corp',
+          rootDomain: 'target.com',
+          ticker: 'TGT',
+          logoUrl: null,
+          brandTheme: {
+            primary: '#000',
+            secondary: '#fff',
+            accent: '#f00',
+            text: '#000',
+            background: '#fff',
+            fontFamily: null,
+            source: 'default',
+          },
+          discoveredAt: '2026-01-01T00:00:00.000Z',
+        },
+        metrics: [
+          {
+            id: 'metric_1',
+            companyId: 'comp_1',
+            metricName: 'ARR',
+            value: '$10M',
+            period: '2025',
             confidence: 'sourced-primary',
             citations: [],
-            updatedAt: '2026-01-01T00:00:00.000Z',
           },
-          company: {
-            id: 'comp_1',
-            name: 'Target Corp',
-            rootDomain: 'target.com',
-            ticker: 'TGT',
-            logoUrl: null,
-            brandTheme: {
-              primary: '#000',
-              secondary: '#fff',
-              accent: '#f00',
-              text: '#000',
-              background: '#fff',
-              fontFamily: null,
-              source: 'default',
-            },
-            discoveredAt: '2026-01-01T00:00:00.000Z',
+        ],
+        viceClaims: [
+          {
+            id: 'vc_1',
+            cardId: 'card_1',
+            claimText: 'High concentration risk',
+            sourceUrl: 'https://example.com',
+            sourceTitle: 'Filing',
+            capturedAt: '2026-01-01T00:00:00.000Z',
           },
-          metrics: [
-            {
-              id: 'metric_1',
-              companyId: 'comp_1',
-              metricName: 'ARR',
-              value: '$10M',
-              period: '2025',
-              confidence: 'sourced-primary',
-              citations: [],
-            },
-          ],
-          viceClaims: [
-            {
-              id: 'vc_1',
-              cardId: 'card_1',
-              claimText: 'High concentration risk',
-              sourceUrl: 'https://example.com',
-              sourceTitle: 'Filing',
-              capturedAt: '2026-01-01T00:00:00.000Z',
-            },
-          ],
-        },
-      ],
-    };
-  }),
+        ],
+      },
+    ],
+  })),
 }));
 
 vi.mock('./scrapers/index.js', () => ({
@@ -300,8 +313,10 @@ describe('Sentinel API Authentication & Persistence', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({ prompt: 'Market research on AI startups', region: 'North America' });
 
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(202);
       expect(res.body.ok).toBe(true);
+      expect(res.body.stage).toBe('discovered');
+      expect(res.body.candidates).toHaveLength(10);
 
       const savedMarket = await getUserMarket(userId, 'mkt_1');
       expect(savedMarket).toBeDefined();
@@ -311,7 +326,11 @@ describe('Sentinel API Authentication & Persistence', () => {
       expect(savedDeck).toBeDefined();
       expect(savedDeck?.marketId).toBe('mkt_1');
 
-      const savedCard = await getUserCard(userId, 'card_1');
+      const savedCard = await vi.waitFor(async () => {
+        const card = await getUserCard(userId, 'card_1');
+        expect(card).toBeDefined();
+        return card;
+      });
       expect(savedCard).toBeDefined();
       expect(savedCard?.title).toBe('Card 1');
 
